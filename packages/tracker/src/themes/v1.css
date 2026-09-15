@@ -1082,3 +1082,61 @@ dialog.cvl{max-height:min(86vh,900px)}
   .pagechrome{flex-direction:column;align-items:flex-start}
   .chrome-actions{width:100%;justify-content:flex-start}
 }
+
+/* ---- the sign-in card ---- */
+.gate-brand{margin-bottom:16px}
+.gate-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--brand);border:1px solid var(--brand);color:var(--brand-on);
+}
+.gate-btn:hover{background:var(--brand-strong);border-color:var(--brand-strong)}
+.gate-btn .acct-ic{width:20px;height:20px}
+.gate-btn-label{font-weight:600}
+
+/* ============================================================
+   v1.4.1 — one row of page controls, one row of data actions
+   ============================================================ */
+
+.pagechrome{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px 16px;flex-wrap:wrap;margin-bottom:12px;
+}
+.chrome-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.chrome-actions .acct-who{margin:0 4px 0 0}
+
+/* every small control in the masthead is the same height, so a row of them
+   reads as a row rather than as four unrelated shapes */
+.themebtn,.acct-btn{
+  min-height:34px;padding:0 14px;
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:var(--t-meta,13px);font-weight:500;line-height:1;
+  border-radius:var(--r-full,999px);
+}
+.acct-btn{border-radius:var(--r-sm,6px)}
+.acct-primary{border-radius:var(--r-sm,6px)}
+
+.acctbar{display:flex;justify-content:flex-end;margin-bottom:10px}
+.acct-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+@media (min-width:701px){
+  .acctbar{flex-direction:row;align-items:center}
+}
+
+@media (max-width:700px){
+  /* logo owns the first line; everything else lines up under it, left, at one
+     height, so nothing looks half-sized next to its neighbour */
+  .pagechrome{flex-direction:column;align-items:stretch;gap:10px}
+  .chrome-actions{justify-content:flex-start}
+  .chrome-actions .acct-who{flex:1 1 100%;order:-1;margin:0}
+  .acctbar{justify-content:flex-start;margin-bottom:12px}
+  .acct-actions{justify-content:flex-start}
+  .themebtn,.acct-btn{min-height:36px;padding:0 13px;font-size:var(--t-xs,12px)}
+  .acct-mail{font-size:var(--t-meta,13px)}
+}
+
+/* A column flex container stretches its children across the cross axis, so
+   .brand-name and .brand-sub both reported the WIDTH OF THE BOX, not of their
+   text — which made the fit measure want === have and set tracking to zero
+   every time, whatever the font. Sizing each line to its own content is what
+   makes the measurement mean anything. */
+.brand-words{align-items:flex-start}

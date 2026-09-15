@@ -50,16 +50,26 @@
     gate.id = 'gate';
 
     var card = el('div', 'gate-card');
-    card.appendChild(el('div', 'gate-eyebrow', 'Job pipeline'));
+    if (root.PageChrome && root.PageChrome.brand) {
+      var mark = el('div', 'gate-brand');
+      mark.appendChild(root.PageChrome.brand());
+      card.appendChild(mark);
+    } else {
+      card.appendChild(el('div', 'gate-eyebrow', 'Job pipeline'));
+    }
     card.appendChild(el('h1', 'gate-title', SITE.title || 'Your applications'));
     card.appendChild(el('p', 'gate-blurb',
       'Sign in with the Google account whose mailbox you want to track. ' +
       'Your rows are stored in your own Google Drive, in a hidden folder only ' +
       'this page can see.'));
 
-    var btn = el('button', 'gate-btn', cfg.demo ? 'Sign in (demo)' : 'Sign in with Google');
+    var btn = el('button', 'gate-btn');
     btn.type = 'button';
     btn.id = 'gate-signin';
+    btn.innerHTML = cfg.demo
+      ? '<span class="gate-btn-label">Sign in (demo)</span>'
+      : '<span class="acct-ic">' + GMAIL_MARK + '</span>' +
+        '<span class="gate-btn-label">Sign in with Google</span>';
     btn.addEventListener('click', signIn);
     card.appendChild(btn);
 
@@ -214,6 +224,9 @@
     picker.click();
   }
 
+  var GMAIL_MARK =
+    '<img src="data:image/png;base64,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" alt="" width="48" height="36">';
+
   /* --------------------------------------------------------------- sign in -- */
 
   function signIn() {
@@ -275,8 +288,7 @@
     return (local[0] || '?').toUpperCase();
   }
 
-  var GMAIL_MARK =
-    '<img src="data:image/png;base64,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" alt="" width="48" height="36">';
+
 
   function buildToolbar() {
     var bar = document.getElementById('acctbar');
@@ -290,7 +302,13 @@
     av.setAttribute('aria-hidden', 'true');
     who.appendChild(av);
     who.appendChild(el('span', 'acct-mail', address));
-    bar.appendChild(who);
+
+    /* Who is signed in belongs with the other page-level controls, not with the
+     * things that act on the data. Putting it in the same row as the theme
+     * switch means one line across the top instead of two competing ones. */
+    var chrome = document.querySelector('#pagechrome .chrome-actions');
+    if (chrome) chrome.insertBefore(who, chrome.firstChild);
+    else bar.appendChild(who);
 
     var actions = el('span', 'acct-actions');
     bar.appendChild(actions);

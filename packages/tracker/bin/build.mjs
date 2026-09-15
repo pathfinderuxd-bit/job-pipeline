@@ -106,13 +106,16 @@ const head = [
 
 // Order matters: render.js and app.js define themselves, gate.js drives them.
 /* cvstore.js and cvui.js load before render.js, because render.js asks cvui
- * for the contents of every CV dropdown as it draws the rows. */
+ * for the contents of every CV dropdown as it draws the rows. chrome.js goes
+ * with them: gate.js draws the sign-in card the moment it is evaluated, and
+ * that card borrows the brand lockup from chrome.js — load it after and the
+ * card silently falls back to a plain text eyebrow. */
 const tail = hosted
   ? [src('store.js'), src('toast.js'), src('extract.js'), src('google.js'),
-     src('cvstore.js'), src('cvui.js'),
-     src('render.js'), src('app.js'), src('gate.js'), src('chrome.js')]
-  : [src('toast.js'), src('cvstore.js'), src('cvui.js'),
-     src('render.js'), src('app.js'), src('chrome.js')];
+     src('cvstore.js'), src('cvui.js'), src('chrome.js'),
+     src('render.js'), src('app.js'), src('gate.js')]
+  : [src('toast.js'), src('cvstore.js'), src('cvui.js'), src('chrome.js'),
+     src('render.js'), src('app.js')];
 
 /* render.js draws the build line as part of the masthead, so there is nothing
  * left to boot here. */

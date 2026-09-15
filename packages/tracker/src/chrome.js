@@ -81,11 +81,20 @@
     sub.style.letterSpacing = '0';
     var want = name.getBoundingClientRect().width;
     var have = sub.getBoundingClientRect().width;
+    if (!want || !have) return;
     var gaps = Math.max(1, (sub.textContent || '').length - 1);
     var per = (want - have) / gaps;
-    /* Clamped: a font that falls back oddly must not push the words apart or
-     * pile them on top of each other. */
-    sub.style.letterSpacing = Math.max(-0.02, Math.min(0.62, per)) + 'px';
+
+    /* Wide enough for the real font. The first version capped this at 0.62px,
+     * which was tuned against a fallback face because the webfont had not
+     * loaded — with IBM Plex the subtitle needs roughly twice that, so it came
+     * out visibly short. The clamp is only here to stop a broken measurement
+     * from exploding the lockup. */
+    sub.style.letterSpacing = Math.max(-0.5, Math.min(8, per)) + 'px';
+
+    /* letter-spacing adds a trailing gap after the last character, so the line
+     * ends up one gap too wide. Pull it back by exactly that. */
+    sub.style.marginRight = (-Math.max(0, per)) + 'px';
   }
 
   function brand() {
@@ -100,7 +109,14 @@
     var sub = wrap.querySelector('.brand-sub');
     function fit(){ fitSub(name, sub); }
     fit();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit).catch(function(){});
+    /* fonts.ready can resolve before the face is actually painted, and the
+     * lockup is wrong in a way you can see if it does. Measure again when the
+     * specific face reports in, and once more on the next frame. */
+    if (document.fonts) {
+      if (document.fonts.ready) document.fonts.ready.then(function(){ fit(); requestAnimationFrame(fit); }).catch(function(){});
+      if (document.fonts.load) document.fonts.load('700 17px "IBM Plex Sans"').then(fit).catch(function(){});
+      if (document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', fit);
+    }
     window.addEventListener('resize', fit);
     return wrap;
   }
@@ -182,7 +198,8 @@
     actions.appendChild(fullBtn);
   }
 
-  root.PageChrome = { mount: mount, apply: apply, saved: saved, resolved: resolved };
+  root.PageChrome = { mount: mount, apply: apply, saved: saved, resolved: resolved,
+                      brand: brand };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mount);
