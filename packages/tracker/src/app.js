@@ -8,7 +8,7 @@ window.TrackerApp = function(){
   var resetBtn = document.getElementById('resetall');
 
   var stats = Array.prototype.slice.call(document.querySelectorAll('.tstat'));
-  var STATUS_LABEL = {live:'Live', wait:'Awaiting', lead:'Lead', shut:'Closed'};
+  var STATUS_LABEL = {live:'Live', lead:'In progress', wait:'Awaiting', shut:'Closed out'};
   var filters = {s:'', date:'', via:'', type:'', cv:'', stale:false};
   var sortKey = 'applied', sortDir = 'desc';
 
@@ -198,12 +198,12 @@ window.TrackerApp = function(){
   });
 
   /* ---------- manual status editing (session only) ---------- */
-  var RANKJS = {live:0, wait:1, lead:2, shut:3};
+  var RANKJS = {live:0, lead:1, wait:2, shut:3};
   var STATUS_OPTIONS = [
     ['live', 'Interview'], ['live', 'Screening'],
-    ['wait', 'Awaiting'], ['wait', 'In progress'],
-    ['lead', 'Lead'], ['lead', 'Shortlisted to apply'],
-    ['shut', 'Closed'], ['shut', 'Not shortlisted'], ['shut', 'Withdrew']
+    ['lead', 'In progress'],
+    ['wait', 'Awaiting'],
+    ['shut', 'Not shortlisted'], ['shut', 'Withdrew']
   ];
 
   function coOf(tr){
@@ -997,7 +997,7 @@ window.TrackerApp = function(){
       menu.appendChild(lab2);
 
       var vals, labels;
-      if (fkey === 's'){ vals = ['live','wait','lead','shut']; labels = vals.map(function(v){ return '<span class="dot dot-' + v + '"></span>' + STATUS_LABEL[v]; }); }
+      if (fkey === 's'){ vals = ['live','lead','wait','shut']; labels = vals.map(function(v){ return '<span class="dot dot-' + v + '"></span>' + STATUS_LABEL[v]; }); }
       else if (fkey === 'date'){ vals = DATES; labels = DATES; }
       else if (fkey === 'type'){ vals = TYPES; labels = TYPES; }
       else if (fkey === 'cv'){ vals = CVS; labels = CVS.map(function(v){ return window.cvDisplayName ? window.cvDisplayName(v) : v; }); }
@@ -1174,7 +1174,7 @@ window.TrackerApp = function(){
     var any = filters.s || filters.date || filters.via || filters.type || filters.cv || filters.stale;
     resetBtn.hidden = !any;
 
-    var counts = {live:0, wait:0, lead:0, shut:0};
+    var counts = {live:0, lead:0, wait:0, shut:0};
     rows.forEach(function(r){ counts[r.getAttribute('data-s')]++; });
     stats.forEach(function(b){
       var f = b.getAttribute('data-f');

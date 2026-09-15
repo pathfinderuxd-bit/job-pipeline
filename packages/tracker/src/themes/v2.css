@@ -1260,3 +1260,92 @@ dialog.cvl{max-height:min(86vh,900px)}
    every time, whatever the font. Sizing each line to its own content is what
    makes the measurement mean anything. */
 .brand-words{align-items:flex-start}
+
+@media (max-width:700px){
+  /* Logo centred on its own line; the avatar joins the controls below it,
+     to their left. The address is dropped rather than truncated — at 390px
+     it would have about 70px to live in, which reads as damage, not brevity.
+     The avatar keeps it as a tooltip. */
+  .brand{align-self:center}
+  .chrome-actions{justify-content:flex-start;flex-wrap:nowrap;gap:8px}
+  .chrome-actions .acct-who{flex:0 0 auto;order:-1;margin:0}
+  .acct-mail{display:none}
+  .acct-av{width:30px;height:30px;font-size:12px}
+}
+
+
+/* ============================================================
+   v1.5 — condensed statuses, and one header row
+   ============================================================ */
+
+/* In progress takes the blue that Lead used to. It is not a warmer Awaiting
+   and not a cooler Interview: it is the employer visibly doing something. */
+.tally .t-lead b{color:var(--lead)}
+
+/* ---- account, behind one control ---- */
+.acct-who{position:relative;display:inline-flex}
+.acct-trigger{
+  font-family:inherit;font-size:var(--t-meta,13px);color:var(--ink-2);cursor:pointer;
+  display:inline-flex;align-items:center;gap:9px;
+  background:none;border:1px solid transparent;border-radius:var(--r-full,999px);
+  padding:3px 10px 3px 3px;min-height:34px;
+}
+.acct-trigger:hover{background:var(--surface-2);border-color:var(--line)}
+.acct-trigger[aria-expanded="true"]{background:var(--surface-2);border-color:var(--line-strong)}
+.acct-caret{display:inline-flex;color:var(--ink-3);flex:0 0 auto}
+.acct-caret svg{width:14px;height:14px;display:block}
+
+.acct-menu{
+  position:absolute;top:calc(100% + 6px);right:0;z-index:60;min-width:210px;
+  background:var(--surface);border:1px solid var(--line-strong);
+  border-radius:var(--r-md,8px);box-shadow:var(--sh-lg,0 10px 26px rgba(0,0,0,.4));
+  padding:5px;display:flex;flex-direction:column;
+}
+.acct-menu[hidden]{display:none}
+.am-head{
+  padding:8px 10px 9px;margin-bottom:4px;border-bottom:1px solid var(--line);
+  font-size:var(--t-xs,12px);color:var(--ink-3);overflow-wrap:anywhere;
+}
+.am-item{
+  font-family:inherit;font-size:var(--t-meta,13px);color:var(--ink-2);
+  background:none;border:0;border-radius:var(--r-sm,6px);
+  padding:9px 10px;text-align:left;cursor:pointer;
+}
+.am-item:hover{background:var(--surface-2);color:var(--ink)}
+
+@media (max-width:700px){
+  /* Logo left, controls right, one line. The theme and full-screen buttons
+     lose their labels and become circles — at this width the words were doing
+     less work than the space they took. */
+  .pagechrome{flex-direction:row;align-items:center;justify-content:space-between;gap:10px;flex-wrap:nowrap}
+  .brand{align-self:auto;flex:0 1 auto;min-width:0}
+  .chrome-actions{flex:0 0 auto;gap:6px;flex-wrap:nowrap;justify-content:flex-end}
+  .chrome-actions .acct-who{order:0;flex:0 0 auto}
+
+  .themebtn{
+    width:36px;height:36px;min-height:36px;padding:0;
+    justify-content:center;border-radius:var(--r-full,999px);
+  }
+  .themebtn span{display:none}
+  .themebtn svg{width:17px;height:17px}
+
+  .acct-trigger{padding:2px;min-height:36px;border-radius:var(--r-full,999px)}
+  .acct-mail{display:none}
+  .acct-av{width:32px;height:32px;font-size:12px}
+  .acct-caret{margin-right:3px}
+
+  .brand-pin{width:26px;height:26px}
+  .brand-name{font-size:14px}
+  .brand-sub{font-size:7.2px}
+}
+@media (max-width:360px){
+  .brand-words{display:none}      /* below this the pin alone has to carry it */
+}
+
+@media (max-width:700px){
+  /* The lockup was flex:0 1 auto with min-width:0, so it measured zero wide and
+     only rendered because its children overflowed the box. It looked right and
+     was one layout change from not being. */
+  .brand{flex:0 0 auto;min-width:auto}
+  .chrome-actions{flex:1 1 auto}
+}

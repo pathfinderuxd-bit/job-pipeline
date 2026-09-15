@@ -297,30 +297,84 @@
     bar.innerHTML = '';
 
     var address = root.Google.account() || '';
+
+    /* Account, and the three things you do to the whole dataset, behind one
+     * control. Refresh stays outside it because it is the thing you actually
+     * came to press; Import, Export and Sign out are occasional. */
     var who = el('span', 'acct-who');
+
+    var trigger = el('button', 'acct-trigger');
+    trigger.type = 'button';
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-haspopup', 'true');
+    trigger.title = 'Signed in as ' + address;
+    trigger.setAttribute('aria-label', 'Signed in as ' + address + '. Account menu.');
     var av = el('span', 'acct-av', initialsFor(address));
     av.setAttribute('aria-hidden', 'true');
-    who.appendChild(av);
-    who.appendChild(el('span', 'acct-mail', address));
+    trigger.appendChild(av);
+    trigger.appendChild(el('span', 'acct-mail', address));
+    var caret = document.createElement('span');
+    caret.className = 'acct-caret';
+    caret.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="m6 9 6 6 6-6"/></svg>';
+    trigger.appendChild(caret);
+    who.appendChild(trigger);
 
-    /* Who is signed in belongs with the other page-level controls, not with the
-     * things that act on the data. Putting it in the same row as the theme
-     * switch means one line across the top instead of two competing ones. */
+    var menu = el('div', 'acct-menu');
+    menu.hidden = true;
+    menu.appendChild(el('div', 'am-head', address));
+
+    function item(label, title, onClick) {
+      var b = el('button', 'am-item', label);
+      b.type = 'button';
+      if (title) b.title = title;
+      b.addEventListener('click', function () { closeMenu(); onClick(); });
+      menu.appendChild(b);
+      return b;
+    }
+
+    function closeMenu() {
+      menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+    trigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      menu.hidden = !menu.hidden;
+      trigger.setAttribute('aria-expanded', String(!menu.hidden));
+    });
+    document.addEventListener('click', function (e) {
+      if (!menu.hidden && !who.contains(e.target)) closeMenu();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    item('Import', 'Merge a JSON export into these rows \u2014 you see the diff first',
+      function () { pickFile(false); });
+
+    item('Export', 'Download a copy of your rows', function () {
+      var blob = new Blob([store.exportJSON()], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'job-pipeline-' + (root.Google.account() || 'export').split('@')[0] + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      toast({ text: 'Exported', tone: 'good' });
+    });
+
+    item('Sign out', '', function () {
+      store.flush().then(function () { root.Google.signOut(); location.reload(); });
+    });
+
+    who.appendChild(menu);
+
     var chrome = document.querySelector('#pagechrome .chrome-actions');
-    if (chrome) chrome.insertBefore(who, chrome.firstChild);
+    if (chrome) chrome.appendChild(who);
     else bar.appendChild(who);
 
     var actions = el('span', 'acct-actions');
     bar.appendChild(actions);
 
-    /* Gmail's own mark, supplied by the owner of this tracker and used to say
-     * which mailbox the button reads — the same thing a "Sign in with Google"
-     * button does. The file arrived with its white areas knocked out to black,
-     * so those are transparent here and the white tile behind shows through,
-     * which is how the mark is meant to read.
-     *
-     * It is a trademark and this is not a Google product. If Google would
-     * rather it were not here, take it out — that decision is not the code's. */
     var refreshBtn = el('button', 'acct-btn acct-primary');
     refreshBtn.type = 'button';
     refreshBtn.id = 'refreshbtn';
@@ -331,31 +385,8 @@
     refreshBtn.addEventListener('click', refresh);
     actions.appendChild(refreshBtn);
 
-    var importBtn = el('button', 'acct-btn', 'Import');
-    importBtn.type = 'button';
-    importBtn.title = 'Merge a JSON export into these rows — you see the diff first';
-    importBtn.addEventListener('click', function () { pickFile(false); });
-    actions.appendChild(importBtn);
 
-    var exportBtn = el('button', 'acct-btn', 'Export');
-    exportBtn.type = 'button';
-    exportBtn.title = 'Download a copy of your rows';
-    exportBtn.addEventListener('click', function () {
-      var blob = new Blob([store.exportJSON()], { type: 'application/json' });
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'job-pipeline-' + (root.Google.account() || 'export').split('@')[0] + '.json';
-      document.body.appendChild(a); a.click(); a.remove();
-      toast({ text: 'Exported', tone: 'good' });
-    });
-    actions.appendChild(exportBtn);
 
-    var outBtn = el('button', 'acct-btn', 'Sign out');
-    outBtn.type = 'button';
-    outBtn.addEventListener('click', function () {
-      store.flush().then(function () { root.Google.signOut(); location.reload(); });
-    });
-    actions.appendChild(outBtn);
   }
 
   /* ----------------------------------------------------------------- draw -- */

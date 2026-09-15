@@ -11,10 +11,10 @@
 (function (root) {
   'use strict';
 
-  /* Sort order down the table. A lead is not a conversation and not a rejection
- * — it is something worth applying to that has not been applied to yet, so it
- * sits below the live ones and above what is already closed out. */
-var RANK = { live: 0, wait: 1, lead: 2, shut: 3 };
+  /* Sort order down the table. Four buckets, warmest first: a booked
+ * conversation, an application the employer is visibly working on, one that
+ * has gone quiet, and one that is finished. */
+var RANK = { live: 0, lead: 1, wait: 2, shut: 3 };
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -113,7 +113,7 @@ var RANK = { live: 0, wait: 1, lead: 2, shut: 3 };
   /* ------------------------------------------------------ masthead + cards -- */
 
   function counts(list) {
-    var c = { live: 0, wait: 0, lead: 0, shut: 0 };
+    var c = { live: 0, lead: 0, wait: 0, shut: 0 };
     (list || []).forEach(function (a) { if (c[a.status] != null) c[a.status]++; });
     return c;
   }

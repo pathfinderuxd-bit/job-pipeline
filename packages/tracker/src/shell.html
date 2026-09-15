@@ -32,13 +32,13 @@
       <span class="tv"><b>0</b><span>Live — interview or screen</span></span>
       <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg></span>
     </button>
+    <button type="button" class="tstat t-lead" data-f="lead" aria-pressed="false">
+      <span class="tv"><b>0</b><span>In progress &mdash; employer moving</span></span>
+      <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12"/><path d="m12 6 6 6-6 6"/></svg></span>
+    </button>
     <button type="button" class="tstat" data-f="wait" aria-pressed="false">
       <span class="tv"><b>0</b><span>Awaiting reply</span></span>
       <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
-    </button>
-    <button type="button" class="tstat t-lead" data-f="lead" aria-pressed="false">
-      <span class="tv"><b>0</b><span>Leads &mdash; not applied yet</span></span>
-      <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2"/><path d="M12 19v2"/><path d="M5 12H3"/><path d="M21 12h-2"/><circle cx="12" cy="12" r="4"/></svg></span>
     </button>
     <button type="button" class="tstat t-shut" data-f="shut" aria-pressed="false">
       <span class="tv"><b>0</b><span>Closed out</span></span>
@@ -65,8 +65,8 @@
     <div class="bar">
       <button type="button" class="qf" id="qf-all" data-f="all" aria-pressed="true">All</button>
       <button type="button" class="qf" id="qf-live" data-f="live" aria-pressed="false"><span class="dot dot-live"></span>Live</button>
+      <button type="button" class="qf" id="qf-lead" data-f="lead" aria-pressed="false"><span class="dot dot-lead"></span>In progress</button>
       <button type="button" class="qf" id="qf-wait" data-f="wait" aria-pressed="false"><span class="dot dot-wait"></span>Awaiting</button>
-      <button type="button" class="qf" id="qf-lead" data-f="lead" aria-pressed="false"><span class="dot dot-lead"></span>Leads</button>
       <button type="button" class="qf" id="qf-shut" data-f="shut" aria-pressed="false"><span class="dot dot-shut"></span>Closed</button>
       <button type="button" class="qf qf-stale" id="qf-stale" data-f="stale" aria-pressed="false" hidden>Needs chasing <span class="qf-n" id="stale-n">0</span></button>
       <button type="button" class="addbtn" id="addrow">
