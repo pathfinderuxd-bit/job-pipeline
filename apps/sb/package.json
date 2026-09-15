@@ -1,0 +1,10 @@
+{
+  "name": "@job-pipeline/sb",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Stuart Birley's pipeline",
+  "scripts": {
+    "build": "node ../../packages/tracker/bin/build.mjs .",
+    "dev": "node ../../packages/tracker/bin/serve.mjs . 5174"
+  }
+}

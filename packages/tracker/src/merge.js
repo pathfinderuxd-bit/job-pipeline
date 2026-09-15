@@ -1,0 +1,187 @@
+/* merge.js — fold a fresh Gmail sweep into the rows you already have.
+ *
+ * The rule that matters: a field you changed by hand is yours. The sweep may
+ * propose a change to it, but it never applies one silently. Everything the
+ * sweep cannot know about — stars, cover letters, job descriptions, which CV
+ * you sent — it does not touch at all.
+ *
+ * Pure functions, no DOM, no storage. Runs in the browser and under node, so
+ * the tests can exercise it directly.
+ */
+(function (root) {
+  'use strict';
+
+  /* Fields the sweep is allowed to have an opinion about. Anything not listed
+   * here belongs to the person and is never proposed, never overwritten. */
+  var SWEEP_FIELDS = ['status', 'chip', 'updated', 'updatedSort', 'note',
+                      'sourceLabel', 'applied', 'appliedSort'];
+
+  /* Fields that are the person's alone, whatever arrives. */
+  var MINE_ONLY = ['star', 'cl', 'jd', 'cv'];
+
+  /* Sort keys travel with the date they sort. Proposing one without the other
+   * would report a change nobody can see, and editing the visible date by hand
+   * claims its sort key too. */
+  var PAIRED = { updatedSort: 'updated', appliedSort: 'applied' };
+
+  function slug(s) {
+    return String(s == null ? '' : s).toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  /* Identity is company + role, not date — an employer re-acknowledging an
+   * application weeks later must land on the row that already exists. The role
+   * loses any trailing location or salary clause first, because boards word
+   * those inconsistently between the confirmation and the rejection. */
+  function roleStem(role) {
+    return slug(String(role || '').split(/\s+[—–-]\s+/)[0]);
+  }
+
+  function keyOf(row) {
+    return slug(row.company) + '::' + roleStem(row.role);
+  }
+
+  function isBlank(v) {
+    return v == null || v === '' || v === '—' || v === 0;
+  }
+
+  /* Compare what the sweep found against what is already on the page.
+   *
+   *   rows      current rows, each optionally carrying `manual`: {field: true}
+   *   incoming  rows from the sweep
+   *   deleted   array of keys the person has deleted and does not want back
+   *
+   * Returns a report. Nothing is changed. */
+  function diff(rows, incoming, deleted) {
+    var byKey = {};
+    (rows || []).forEach(function (r) { byKey[keyOf(r)] = r; });
+    var gone = {};
+    (deleted || []).forEach(function (k) { gone[k] = true; });
+
+    var report = { added: [], changed: [], conflicts: [], skipped: [], unchanged: 0 };
+
+    (incoming || []).forEach(function (inc) {
+      var key = keyOf(inc);
+
+      if (gone[key]) { report.skipped.push({ key: key, row: inc }); return; }
+
+      var cur = byKey[key];
+      if (!cur) { report.added.push(inc); return; }
+
+      var fields = [];
+      SWEEP_FIELDS.forEach(function (f) {
+        var to = inc[f], from = cur[f];
+        if (isBlank(to) || String(to) === String(from)) return;
+        if (PAIRED[f] && isBlank(inc[PAIRED[f]])) return;
+
+        /* An older sweep must not walk a row backwards. */
+        if ((f === 'updated' || f === 'updatedSort') &&
+            Number(inc.updatedSort || 0) < Number(cur.updatedSort || 0)) return;
+        if ((f === 'status' || f === 'chip') &&
+            Number(inc.updatedSort || 0) < Number(cur.updatedSort || 0)) return;
+
+        fields.push({ field: f, from: from, to: to });
+      });
+
+      if (!fields.length) { report.unchanged++; return; }
+
+      var mine = (cur.manual || {});
+      function isMine(f){ return !!(mine[f] || (PAIRED[f] && mine[PAIRED[f]])); }
+      var claimed = fields.filter(function (f) { return isMine(f.field); });
+      var free = fields.filter(function (f) { return !isMine(f.field); });
+
+      if (free.length) report.changed.push({ key: key, row: cur, incoming: inc, fields: free });
+      if (claimed.length) report.conflicts.push({ key: key, row: cur, incoming: inc, fields: claimed });
+    });
+
+    return report;
+  }
+
+  /* Apply a report. `choices` decides what actually lands:
+   *
+   *   {add: true, change: true, conflicts: {'<key>::<field>': true}}
+   *
+   * Conflicts are opt-in one at a time; nothing there is applied by default. */
+  function apply(rows, report, choices) {
+    var opts = choices || {};
+    var conflictPicks = opts.conflicts || {};
+    var out = (rows || []).map(function (r) { return r; });
+    var byKey = {};
+    out.forEach(function (r, i) { byKey[keyOf(r)] = i; });
+
+    var applied = { added: 0, changed: 0, conflicts: 0 };
+
+    function write(entry, fields) {
+      var i = byKey[entry.key];
+      if (i == null) return 0;
+      var copy = {};
+      Object.keys(out[i]).forEach(function (k) { copy[k] = out[i][k]; });
+      fields.forEach(function (f) { copy[f.field] = f.to; });
+      MINE_ONLY.forEach(function (k) {
+        if (out[i][k] !== undefined) copy[k] = out[i][k];
+      });
+      out[i] = copy;
+      return fields.length;
+    }
+
+    if (opts.add !== false) {
+      var skip = opts.skipAdded || {};
+      report.added.forEach(function (r) {
+        if (skip[keyOf(r)]) return;
+        out.push(r);
+        byKey[keyOf(r)] = out.length - 1;
+        applied.added++;
+      });
+    }
+
+    if (opts.change !== false) {
+      report.changed.forEach(function (c) {
+        if (write(c, c.fields)) applied.changed++;
+      });
+    }
+
+    report.conflicts.forEach(function (c) {
+      var picked = c.fields.filter(function (f) {
+        return conflictPicks[c.key + '::' + f.field];
+      });
+      if (picked.length && write(c, picked)) applied.conflicts++;
+    });
+
+    out.sort(function (a, b) {
+      return (Number(b.appliedSort) || 0) - (Number(a.appliedSort) || 0);
+    });
+
+    return { rows: out, applied: applied };
+  }
+
+  /* Split additions into the ones worth trusting and the ones that could not
+   * be named. Indeed's confirmations never carry the employer, so a sweep
+   * always turns up a few — they are offered, not applied. */
+  function partitionAdded(report) {
+    var named = [], unnamed = [];
+    report.added.forEach(function (r) {
+      (r.needsReview ? unnamed : named).push(r);
+    });
+    return { named: named, unnamed: unnamed };
+  }
+
+  /* A one-line human summary of a report, for the toast. */
+  function summarise(report) {
+    var bits = [];
+    var split = partitionAdded(report);
+    if (split.named.length) bits.push(split.named.length + ' new');
+    if (split.unnamed.length) bits.push(split.unnamed.length + ' unnamed');
+    if (report.changed.length) bits.push(report.changed.length + ' updated');
+    if (report.conflicts.length) bits.push(report.conflicts.length + ' needing a decision');
+    if (report.skipped.length) bits.push(report.skipped.length + ' previously deleted');
+    if (!bits.length) return 'Nothing new';
+    return bits.join(', ');
+  }
+
+  var API = { keyOf: keyOf, roleStem: roleStem, diff: diff, apply: apply,
+              partitionAdded: partitionAdded,
+              summarise: summarise, SWEEP_FIELDS: SWEEP_FIELDS, MINE_ONLY: MINE_ONLY };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = API;
+  else root.Merge = API;
+})(typeof window !== 'undefined' ? window : globalThis);

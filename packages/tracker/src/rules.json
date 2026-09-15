@@ -1,0 +1,226 @@
+{
+  "_comment": "Sender domains map to the Via badge. Add a board by adding a domain here and, if it needs its own badge, to packages/tracker/src/config.js.",
+  "sources": {
+    "indeed.com": "Indeed",
+    "indeedemail.com": "Indeed",
+    "linkedin.com": "LinkedIn",
+    "jobserve.com": "JobServe",
+    "welcometothejungle.com": "Welcome to the Jungle",
+    "otta.com": "Welcome to the Jungle",
+    "adzuna.co.uk": "Adzuna ApplyIQ",
+    "workable.com": "Workable",
+    "workablemail.com": "Workable",
+    "myworkday.com": "Workday",
+    "teamtailor.com": "Teamtailor",
+    "teamtailormail.com": "Teamtailor",
+    "ashbyhq.com": "Ashby",
+    "flexhire.com": "Flexhire",
+    "webitrent.com": "Webitrent",
+    "reed.co.uk": "Reed",
+    "recruitee.com": "Recruitee",
+    "personio.de": "Personio",
+    "rippling.com": "Rippling",
+    "greenhouse.io": "Greenhouse",
+    "us.greenhouse-mail.io": "Greenhouse",
+    "lever.co": "Lever",
+    "smartrecruiters.com": "SmartRecruiters",
+    "pinpointhq.com": "Pinpoint",
+    "eu.greenhouse-mail.io": "Greenhouse",
+    "greenhouse-mail.io": "Greenhouse"
+  },
+  "_statusComment": "First matching pattern wins, tested against subject then body. Order matters: rejections before acknowledgements, because a rejection often repeats the acknowledgement wording.",
+  "status": [
+    {
+      "status": "live",
+      "chip": "Interview",
+      "match": [
+        "invite you to interview",
+        "schedule an interview",
+        "book a time",
+        "interview confirmed",
+        "your interview with",
+        "next stage"
+      ]
+    },
+    {
+      "status": "live",
+      "chip": "Screening",
+      "match": [
+        "screening call",
+        "initial call",
+        "intro call",
+        "quick chat",
+        "would love to speak"
+      ]
+    },
+    {
+      "status": "shut",
+      "chip": "Rejected",
+      "match": [
+        "not be progressing",
+        "not progressing",
+        "unsuccessful",
+        "decided not to",
+        "will not be moving forward",
+        "unable to offer",
+        "regret to inform"
+      ]
+    },
+    {
+      "status": "shut",
+      "chip": "Not shortlisted",
+      "match": [
+        "not shortlisted",
+        "not been shortlisted",
+        "other candidates",
+        "closer match"
+      ]
+    },
+    {
+      "status": "shut",
+      "chip": "Withdrew",
+      "match": [
+        "you have withdrawn",
+        "application withdrawn"
+      ]
+    },
+    {
+      "status": "shut",
+      "chip": "Vacancy withdrawn",
+      "match": [
+        "vacancy has been withdrawn",
+        "role has been withdrawn",
+        "position has been closed",
+        "no longer recruiting"
+      ]
+    },
+    {
+      "status": "wait",
+      "chip": "Awaiting",
+      "match": [
+        "application received",
+        "we have received your application",
+        "thanks for applying",
+        "thank you for applying",
+        "application submitted",
+        "your application to",
+        "successfully applied",
+        "application was sent"
+      ]
+    }
+  ],
+  "_typeComment": "Guessed from words in the role title; anything unmatched falls back to Full-Time.",
+  "types": {
+    "Contract": [
+      "contract",
+      "outside ir35",
+      "inside ir35",
+      "day rate",
+      "/day",
+      "interim"
+    ],
+    "Temporary": [
+      "fixed term",
+      "fixed-term",
+      "ftc",
+      "maternity cover",
+      "12-month",
+      "6-month",
+      "temporary"
+    ],
+    "Freelance": [
+      "freelance"
+    ],
+    "Fractional": [
+      "fractional",
+      "part time day",
+      "two days a week"
+    ],
+    "Part-Time": [
+      "part time",
+      "part-time"
+    ]
+  },
+  "_subjectComment": "How to pull company and role out of a subject line. Each entry is a regular expression with named groups; the first one that matches is used.",
+  "subjectPatterns": [
+    "^(?:Your )?[Aa]pplication (?:for|to) (?<role>.+?) at (?<company>.+?)$",
+    "^(?<company>.+?): (?:Your )?application for (?<role>.+?)$",
+    "^Thank you for applying to (?<role>.+?) at (?<company>.+?)$",
+    "^(?:Update on your|Your) application (?:for|to) (?<role>.+?)(?: at (?<company>.+?))?$",
+    "^Application received[:–-]\\s*(?<role>.+?)(?: at (?<company>.+?))?$",
+    "^(?<company>.+?) (?:has )?received your application(?: for (?<role>.+?))?$"
+  ],
+  "_ignoreComment": "Mail from these senders is job-adjacent noise, not an application.",
+  "ignoreSenders": [
+    "alert@indeed.com",
+    "help@welcometothejungle.com",
+    "invitations@linkedin.com",
+    "invitetoapply@indeed.com",
+    "jobalerts-noreply@linkedin.com",
+    "jobs-listings@linkedin.com",
+    "jobs-noreply@linkedin.com",
+    "jobsbyemail@reed.co.uk",
+    "messages-noreply@linkedin.com",
+    "news-noreply@linkedin.com",
+    "noreply@indeed.com",
+    "noreply@jobalerts.jobserve.com",
+    "notifications-noreply@linkedin.com"
+  ],
+  "ignoreSubjects": [
+    "appeared in",
+    "are hiring",
+    "based on your profile",
+    "boost your profile",
+    "complete your profile",
+    "daily jobs",
+    "data retention",
+    "digest",
+    "free trial",
+    "hiring now",
+    "invitation to apply",
+    "is hiring",
+    "job alert",
+    "job picks",
+    "jobs digest",
+    "jobs for you",
+    "jobs you may",
+    "keep your search",
+    "matching your",
+    "more jobs like",
+    "new jobs",
+    "new match",
+    "newsletter",
+    "opportunities for you",
+    "people also viewed",
+    "premium",
+    "profile views",
+    "recommended for you",
+    "recommended jobs",
+    "reset your password",
+    "searches",
+    "similar jobs",
+    "stand out",
+    "still looking",
+    "this week on",
+    "top job picks",
+    "trending jobs",
+    "unsubscribe confirmation",
+    "upgrade to premium",
+    "verify your email",
+    "we found",
+    "weekly jobs",
+    "welcome to",
+    "who viewed",
+    "you appeared",
+    "your job alert",
+    "your job search",
+    "your weekly"
+  ],
+  "_gateComment": "A thread only becomes a row if one of the status patterns above matches somewhere in it. No acknowledgement, no rejection, no interview wording means it is not an application — a job alert, a profile notification, a newsletter. Widening the 'wait' patterns is what to do if a real application is being missed.",
+  "labels": [
+    "Jobs",
+    "LinkedIn",
+    "Indeed"
+  ],
+  "noiseLabel": "Jobs/Noise"
+}

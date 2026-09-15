@@ -1,0 +1,18 @@
+{
+  "name": "web",
+  "mode": "hosted",
+  "theme": "v2",
+  "sweepMonths": 6,
+  "_googleClientId": "Paste your OAuth client ID here — SETUP.md step 2. It looks like 1234...apps.googleusercontent.com and is public by design; there is no secret in a browser client.",
+  "googleClientId": "271410107508-pb6e75c1rinfujk975rlhr93oovpruv1.apps.googleusercontent.com",
+  "baselines": {
+    "demo": {
+      "label": "Sample data",
+      "note": "invented — nothing real",
+      "from": "../blank/data/applications.json"
+    }
+  },
+  "_baselines": "A hosted page is public: everything here is readable in the page source before anyone signs in. Ship only invented data. Real rows arrive per person, via Import a file or a first Gmail sweep.",
+  "_dropUnnamed": "Rows whose employer the sweep could not work out are skipped rather than offered. Set false to be shown them with tick boxes.",
+  "dropUnnamed": true
+}

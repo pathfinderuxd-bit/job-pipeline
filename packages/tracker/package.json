@@ -1,0 +1,11 @@
+{
+  "name": "@job-pipeline/tracker",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "The tracker itself: shell, themes, renderer, behaviour and the build script",
+  "bin": {
+    "tracker-build": "./bin/build.mjs",
+    "tracker-serve": "./bin/serve.mjs"
+  }
+}

@@ -1,0 +1,24 @@
+node_modules/
+dist/
+
+# per-person Google credentials — never commit these
+packages/gmail-import/credentials.json
+packages/gmail-import/.token.json
+**/.token.json
+
+# importer backups
+**/applications.backup-*.json
+
+.DS_Store
+*.log
+.env
+
+# real application data — local only, never pushed. The hosted build ships
+# sample rows; each person imports their own after signing in.
+import-rich.json
+import-stu.json
+apps/rb/data/
+apps/sb/data/
+
+# frozen builds carry whatever data they were built with
+releases/

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- a personal tool: no reason for it to turn up in search results -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#C2791A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title id="doc-title">Job Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div class="pagechrome" id="pagechrome"></div>
+    <div class="acctbar" id="acctbar" hidden></div>
+    <div class="eyebrow" id="mast-eyebrow"></div>
+    <h1 id="mast-title"></h1>
+    <p class="standfirst" id="mast-standfirst"></p>
+    <p class="buildline" id="buildline" hidden></p>
+  </header>
+
+  <section class="tally" aria-label="Filter by status">
+    <button type="button" class="tstat t-live" data-f="live" aria-pressed="false">
+      <span class="tv"><b>0</b><span>Live — interview or screen</span></span>
+      <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg></span>
+    </button>
+    <button type="button" class="tstat" data-f="wait" aria-pressed="false">
+      <span class="tv"><b>0</b><span>Awaiting reply</span></span>
+      <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+    </button>
+    <button type="button" class="tstat t-lead" data-f="lead" aria-pressed="false">
+      <span class="tv"><b>0</b><span>Leads &mdash; not applied yet</span></span>
+      <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2"/><path d="M12 19v2"/><path d="M5 12H3"/><path d="M21 12h-2"/><circle cx="12" cy="12" r="4"/></svg></span>
+    </button>
+    <button type="button" class="tstat t-shut" data-f="shut" aria-pressed="false">
+      <span class="tv"><b>0</b><span>Closed out</span></span>
+      <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></span>
+    </button>
+    <button type="button" class="tstat" data-f="all" aria-pressed="true">
+      <span class="tv"><b>0</b><span>Applications total</span></span>
+      <span class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
+    </button>
+  </section>
+
+  <section>
+    <h2>Live applications</h2>
+    <ul class="live-list"></ul>
+  </section>
+
+  <section id="starred-sec" hidden>
+    <h2>Starred</h2>
+    <ul class="live-list star-list" id="starlist"></ul>
+  </section>
+
+  <section>
+    <h2>All applications</h2>
+    <div class="bar">
+      <button type="button" class="qf" id="qf-all" data-f="all" aria-pressed="true">All</button>
+      <button type="button" class="qf" id="qf-live" data-f="live" aria-pressed="false"><span class="dot dot-live"></span>Live</button>
+      <button type="button" class="qf" id="qf-wait" data-f="wait" aria-pressed="false"><span class="dot dot-wait"></span>Awaiting</button>
+      <button type="button" class="qf" id="qf-lead" data-f="lead" aria-pressed="false"><span class="dot dot-lead"></span>Leads</button>
+      <button type="button" class="qf" id="qf-shut" data-f="shut" aria-pressed="false"><span class="dot dot-shut"></span>Closed</button>
+      <button type="button" class="qf qf-stale" id="qf-stale" data-f="stale" aria-pressed="false" hidden>Needs chasing <span class="qf-n" id="stale-n">0</span></button>
+      <button type="button" class="addbtn" id="addrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add
+      </button>
+      <button type="button" class="reset" id="resetall" hidden>Clear filters</button>
+      <button type="button" class="reset" id="resetcols" hidden>Reset columns</button>
+      <button type="button" class="colsbtn" id="colsbtn" aria-haspopup="true" aria-expanded="false">Columns</button>
+      <span class="count" id="rowcount">0 shown</span>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" class="th-star" data-col="c-star" aria-label="Starred"><span class="starhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.7 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.7l-5.1 2.7.97-5.68L3.75 9.7l5.7-.83z"/></svg></span></th>
+            <th scope="col" data-col="c-status"><button type="button" class="colbtn" id="c-status" data-k="rank" data-f="s">Status <span class="fdot"></span><span class="ind">&#9660;</span></button></th>
+            <th scope="col" data-col="c-date"><button type="button" class="colbtn active" id="c-applied" data-k="applied" data-f="date">Applied <span class="fdot"></span><span class="ind">&#9660;</span></button></th>
+            <th scope="col" data-col="c-co"><button type="button" class="colbtn" id="c-co" data-k="co" data-f="">Company <span class="fdot"></span><span class="ind">&#9660;</span></button></th>
+            <th scope="col" data-col="c-role"><button type="button" class="colbtn" id="c-role" data-k="role" data-f="">Role / Latest <span class="fdot"></span><span class="ind">&#9660;</span></button></th>
+            <th scope="col" data-col="c-type"><button type="button" class="colbtn" id="c-type" data-k="type" data-f="type">Type <span class="fdot"></span><span class="ind">&#9660;</span></button></th>
+            <th scope="col" data-col="c-src"><button type="button" class="colbtn" id="c-via" data-k="via" data-f="via">Via <span class="fdot"></span><span class="ind">&#9660;</span></button></th>
+            <th scope="col" data-col="c-upd"><button type="button" class="colbtn" id="c-upd" data-k="updated" data-f="">Updated <span class="fdot"></span><span class="ind">&#9660;</span></button></th>
+            <th scope="col" data-col="c-cl"><button type="button" class="colbtn" id="c-cl" data-k="cl" data-f="">Cover letter <span class="fdot"></span><span class="ind">&#8645;</span></button></th>
+            <th scope="col" data-col="c-cv"><button type="button" class="colbtn" id="c-cv" data-k="cv" data-f="cv">CV <span class="fdot"></span><span class="ind">&#8645;</span></button></th>
+            <th scope="col" class="th-act" data-col="c-act" aria-label="Row actions"></th>
+          </tr>
+        </thead>
+        <tbody id="tb"></tbody>
+      </table>
+      <div class="empty" id="emptymsg" hidden>No applications match these filters.</div>
+    </div>
+  </section>
+
+  <section class="insights">
+    <div class="sechead">
+      <h2>Application insights</h2>
+      <div class="ins-nav">
+        <button type="button" id="ins-prev" aria-label="Previous insight">&#8592;</button>
+        <button type="button" id="ins-next" aria-label="Next insight">&#8594;</button>
+        <span id="ins-pos">1 / 6</span>
+      </div>
+    </div>
+    <div class="ins-vp" id="ins-vp">
+    <div class="ins-track" id="ins-track" tabindex="0" aria-label="Application insights, scroll horizontally">
+    </div>
+    </div>
+  </section>
+
+  <dialog class="edit cl" id="cldlg" aria-labelledby="cl-title">
+    <div class="ed-head cl-head">
+      <span id="cl-title">Cover letter</span>
+      <span class="cl-actions">
+        <button type="button" class="btn-ghost" id="cl-copy">Copy</button>
+        <button type="button" class="btn-ghost" id="cl-close">Close</button>
+      </span>
+    </div>
+    <div class="ed-body cl-body">
+      <textarea id="cl-text" rows="18" spellcheck="true"
+        placeholder="Paste your cover letter here. Line breaks and paragraphs are kept exactly as pasted."></textarea>
+    </div>
+    <div class="ed-foot cl-foot"><span class="cl-hint" id="cl-hint">Saved automatically</span></div>
+  </dialog>
+
+  <dialog class="edit diff" id="diffdlg" aria-labelledby="diff-title">
+    <div class="ed-head"><span id="diff-title">Refresh</span></div>
+    <div class="ed-body diff-body" id="diff-body"></div>
+    <div class="ed-foot">
+      <button type="button" class="btn-ghost" id="diff-cancel">Cancel</button>
+      <button type="button" class="btn-primary" id="diff-apply">Apply changes</button>
+    </div>
+  </dialog>
+
+  <dialog class="edit cl" id="jddlg" aria-labelledby="jd-title">
+    <div class="ed-head cl-head">
+      <span id="jd-title">Job description</span>
+      <span class="cl-actions">
+        <button type="button" class="btn-ghost" id="jd-copy">Copy</button>
+        <button type="button" class="btn-ghost" id="jd-close">Close</button>
+      </span>
+    </div>
+    <div class="ed-body cl-body">
+      <textarea id="jd-text" rows="18" spellcheck="true"
+        placeholder="Paste the job description here. Line breaks, bullet points and paragraphs are kept exactly as pasted."></textarea>
+    </div>
+    <div class="ed-foot cl-foot"><span class="cl-hint" id="jd-hint">Saved automatically</span></div>
+  </dialog>
+
+  <dialog class="edit" id="editdlg" aria-labelledby="ed-title">
+    <form id="editform" method="dialog">
+      <div class="ed-head" id="ed-title">Edit application</div>
+      <div class="ed-body">
+        <details class="paste" id="ed-paste">
+          <summary>Paste a confirmation or a job card to fill this in</summary>
+          <textarea id="paste-text" rows="4" spellcheck="false"
+            placeholder="Paste the LinkedIn &#8220;your application was sent&#8221; screen, a job card, or an ATS thank-you page. Nothing leaves this page."></textarea>
+          <div class="paste-foot">
+            <button type="button" class="btn-ghost" id="paste-fill">Fill the form</button>
+            <span class="paste-hint" id="paste-hint"></span>
+          </div>
+        </details>
+        <label class="full">Company<input type="text" id="ed-co" autocomplete="off"></label>
+        <label class="full">Role<input type="text" id="ed-role" autocomplete="off"></label>
+        <label class="full">Latest<input type="text" id="ed-note" autocomplete="off" placeholder="e.g. employer reviewing"></label>
+        <label>Status<select id="ed-status"></select></label>
+        <label>Type<select id="ed-type"></select></label>
+        <label>Applied<input type="date" id="ed-applied"></label>
+        <label>Updated<input type="date" id="ed-updated"></label>
+        <label>Source<select id="ed-src"></select></label>
+        <label>Via label<input type="text" id="ed-via" autocomplete="off" placeholder="e.g. Indeed &#8594; Recruitee"></label>
+        <label class="full">CV used<select id="ed-cv"></select></label>
+      </div>
+      <div class="ed-foot">
+        <button type="button" class="btn-ghost" id="ed-check" hidden>Check Gmail for replies</button>
+        <span class="ed-check-out" id="ed-check-out"></span>
+        <button type="button" class="btn-ghost" id="ed-cancel">Cancel</button>
+        <button type="submit" class="btn-primary" id="ed-save">Save changes</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="edit cvl" id="cvldlg" aria-labelledby="cvl-title">
+    <div class="ed-head cl-head">
+      <span id="cvl-title">CV library</span>
+      <span class="cl-actions">
+        <button type="button" class="btn-ghost" id="cvl-close">Close</button>
+      </span>
+    </div>
+    <div class="ed-body cvl-body">
+      <form id="cvl-form" class="cvl-upload">
+        <label class="cvl-grow">CV name
+          <input type="text" id="cvl-name" maxlength="160" autocomplete="off"
+                 placeholder="e.g. Delivery Lead &#8212; September">
+        </label>
+        <label>Used for<select id="cvl-kindsel"></select></label>
+        <label class="cvl-grow">File
+          <input type="file" id="cvl-file" accept=".pdf,.docx,.doc,.odt,.rtf,.txt,.pages" required>
+        </label>
+        <button type="submit" class="btn-primary" id="cvl-submit">Upload CV</button>
+      </form>
+      <p class="cvl-hint">PDF, Word, Pages, ODT, RTF or TXT, up to 25&nbsp;MB. Every upload is kept
+        as its own version, so nothing you have already sent out gets overwritten.</p>
+      <p class="cvl-status" id="cvl-status" role="status" aria-live="polite"></p>
+
+      <div class="cvl-listhead">
+        <h3>Your CVs</h3>
+        <span class="cvl-count" id="cvl-count"></span>
+      </div>
+      <div class="cvl-wrap">
+        <div class="cvl-list" id="cvl-list">
+          <div class="cvl-row cvl-head" aria-hidden="true">
+            <span>CV</span><span>Used for</span><span>Uploaded</span>
+            <span>Size</span><span>On</span><span></span>
+          </div>
+          <div id="cvl-rows"></div>
+        </div>
+        <div class="empty" id="cvl-empty" hidden>Nothing here yet. Upload a CV and it shows up in
+          every row&#8217;s CV dropdown.</div>
+      </div>
+
+      <details class="cvl-deleted" id="cvl-deleted" hidden>
+        <summary id="cvl-deleted-count">Deleted CVs</summary>
+        <ul id="cvl-deleted-list"></ul>
+      </details>
+    </div>
+  </dialog>
+
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

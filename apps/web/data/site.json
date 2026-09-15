@@ -1,0 +1,7 @@
+{
+  "title": "Job Pipeline",
+  "eyebrow": "Live job tracker  \u00b7  last updated {{UPDATED}}",
+  "standfirst": "{{N}} applications, {{LIVE}} live conversations, {{WAIT}} awaiting a reply. Refresh from Gmail to pull in anything new.",
+  "updated": "auto",
+  "insights": []
+}

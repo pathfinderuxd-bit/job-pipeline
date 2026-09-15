@@ -1,0 +1,77 @@
+name: Deploy tracker to GitHub Pages
+
+# Builds apps/web and publishes it. Pages is a setting on this repository, not
+# a separate service — Settings → Pages → Source: GitHub Actions, once.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/tracker/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; a newer push waits rather than cancelling the one
+# already going out.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Registers this repo as a Pages site if it is not already, so the first
+      # push does not race the Settings → Pages switch.
+      - uses: actions/configure-pages@v5
+
+      - name: Check the merge still behaves
+        run: node --test packages/tracker/test/*.test.mjs
+
+      - name: Build every app
+        run: npm run build
+
+      - name: Fail if the hosted build has no Google client ID
+        run: |
+          if ! grep -q 'googleClientId":"[0-9]' apps/web/dist/index.html; then
+            echo "apps/web/tracker.config.json has no googleClientId — see SETUP.md."
+            exit 1
+          fi
+
+      # A hosted page is public. Everything baked into it is readable in the
+      # page source before anyone signs in, so no real application data may be.
+      - name: Fail if real data is baked into the public build
+        run: |
+          node scripts/no-real-data.mjs --tree
+          node scripts/no-real-data.mjs apps/web/dist/index.html
+
+      - name: Collect the site
+        run: |
+          mkdir -p _site
+          cp apps/web/dist/index.html _site/index.html
+          printf 'User-agent: *\nDisallow: /\n' > _site/robots.txt
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

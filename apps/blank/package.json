@@ -1,0 +1,10 @@
+{
+  "name": "@job-pipeline/blank",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Showcase build on stub data",
+  "scripts": {
+    "build": "node ../../packages/tracker/bin/build.mjs .",
+    "dev": "node ../../packages/tracker/bin/serve.mjs . 5175"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "job-pipeline",
+  "private": true,
+  "version": "1.4.0",
+  "description": "Job application tracker \u2014 one app, one dataset per person",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build:web && npm run build:preview && npm run build:rb && npm run build:sb && npm run build:blank",
+    "build:web": "node packages/tracker/bin/build.mjs apps/web",
+    "build:rb": "node packages/tracker/bin/build.mjs apps/rb",
+    "build:sb": "node packages/tracker/bin/build.mjs apps/sb",
+    "build:blank": "node packages/tracker/bin/build.mjs apps/blank",
+    "dev": "node packages/tracker/bin/serve.mjs apps/web 5176",
+    "dev:web": "node packages/tracker/bin/serve.mjs apps/web 5176",
+    "dev:rb": "node packages/tracker/bin/serve.mjs apps/rb 5173",
+    "dev:sb": "node packages/tracker/bin/serve.mjs apps/sb 5174",
+    "dev:blank": "node packages/tracker/bin/serve.mjs apps/blank 5175",
+    "test": "node --test packages/tracker/test/*.test.mjs",
+    "check": "npm test && node packages/tracker/bin/check.mjs && node scripts/no-real-data.mjs --tree && node scripts/no-real-data.mjs apps/web/dist/index.html && node scripts/no-real-data.mjs apps/preview/dist/index.html",
+    "import:gmail": "node packages/gmail-import/src/import.mjs",
+    "build:preview": "node packages/tracker/bin/build.mjs apps/preview",
+    "dev:preview": "node packages/tracker/bin/serve.mjs apps/preview 5177",
+    "check:history": "node scripts/no-real-data-history.mjs"
+  },
+  "lineage": "merged"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@job-pipeline/rb",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Rich Birley's pipeline",
+  "scripts": {
+    "build": "node ../../packages/tracker/bin/build.mjs .",
+    "dev": "node ../../packages/tracker/bin/serve.mjs . 5173"
+  }
+}

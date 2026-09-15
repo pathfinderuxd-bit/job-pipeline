@@ -1,0 +1,10 @@
+{
+  "name": "@job-pipeline/web",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The hosted build: one page, sign in as yourself",
+  "scripts": {
+    "build": "node ../../packages/tracker/bin/build.mjs .",
+    "dev": "node ../../packages/tracker/bin/serve.mjs . 5176"
+  }
+}

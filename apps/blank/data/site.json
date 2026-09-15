@@ -1,0 +1,23 @@
+{
+  "title": "Design Role Pipeline — Demo",
+  "eyebrow": "Sample data  ·  Live job tracker — last updated {{UPDATED}}",
+  "standfirst": "A showcase build running on invented data. {{N}} applications, {{LIVE}} live conversations, {{WAIT}} awaiting a reply. Every company on this page is fictional.",
+  "updated": "auto",
+  "insights": [
+    {
+      "kicker": "What this is",
+      "title": "A demo build with stub data",
+      "body": "Nothing here is real. Point tracker.config.json at your own data/applications.json to see your pipeline instead, or run the Gmail importer to generate one."
+    },
+    {
+      "kicker": "Try it",
+      "title": "Everything in the table is editable",
+      "body": "Click a status pill to change it, the ellipsis to edit a whole row, Columns to show and hide fields, and a column header to sort or filter. Edits save to this browser only."
+    },
+    {
+      "kicker": "Cover letters",
+      "title": "Paste a cover letter against any row",
+      "body": "The Cover letter column opens a panel that keeps your paragraphs exactly as pasted, with a copy button in the corner. The CV column records which CV variant you sent."
+    }
+  ]
+}

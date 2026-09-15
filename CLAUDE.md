@@ -1,0 +1,183 @@
+# Working in this repo
+
+Read `README.md` first — it covers the layout, the data shape and how to build.
+This file is the stuff that isn't obvious from reading the code.
+
+## The shape of it
+
+`packages/tracker` is the app. `apps/*` are data only. If you find yourself
+copying a file from one app into another, stop: it belongs in the package.
+
+There are two build shapes, set by `mode` in an app's `tracker.config.json`.
+**offline** bakes the data in and renders at load; **hosted** starts empty behind
+a Google sign-in. Both come out as one self-contained HTML file.
+
+Script order is fixed in `bin/build.mjs` and matters:
+
+1. `TRACKER_CONFIG`
+2. `src/config.js` — `SRC_BADGE`, `TYPE_ICONS`, `CV_OPTIONS`, `CV_SEED`
+3. `window.BUILD` — version, app, theme, mode, build time; drawn as the badge
+   under the masthead
+4. the data — `window.APPLICATIONS` (offline) or `window.BASELINES` + `RULES` (hosted)
+5. `src/merge.js` — pure, no DOM
+6. hosted only: `store.js`, `toast.js`, `extract.js`, `google.js`
+7. `src/cvstore.js` then `src/cvui.js` — the CV library. Both must load before
+   render.js, which asks `cvOptionsHtml()` for the contents of every CV
+   dropdown as it draws the rows.
+8. `src/render.js` — writes the `<tbody>`, masthead and insight cards
+9. `src/app.js` — defines `window.TrackerApp`, which reads rows out of the DOM
+10. hosted only: `src/gate.js` — drives sign-in, then calls `Render.all()` and `TrackerApp()`
+
+An offline build sets `window.__BOOT_NOW` in render.js and app.js boots itself at
+the bottom. A hosted build does not, and waits for gate.js.
+
+## Four statuses, not three
+
+`live` / `wait` / `lead` / `shut`. A **lead** is something worth applying to that
+has not been applied to yet — it is in the table so it can be acted on, but it
+is not an application, so it never counts as one. It sorts below the live rows
+and above what is closed, and it takes the blue both themes already carry for
+insights, so it reads as *outside the pipeline* rather than as a warmer or
+cooler version of applied. Adding another status means touching `RANK` in
+render.js, `RANKJS` and `STATUS_OPTIONS` in app.js, the tally row in shell.html,
+the counts in `apply()`, and the allow-list in `bin/check.mjs`.
+
+## Needs chasing
+
+Derived, never stored: days since `updatedSort || appliedSort`, for rows that
+are still `live` or `wait`. A lead was never applied to and a closed one is
+finished, so neither can go stale. The age badge is written into the Updated
+cell, which means anything that rewrites that cell must also
+`removeAttribute('data-base')` or the badge will be appended to a stale value.
+
+## Adding a row by hand
+
+`+ Add` draws a blank row with `Render.rowHtml` — the same renderer as every
+other row, so it carries the same attributes and the same delegated handlers —
+inserts it, and opens the editor with `adding` set. Cancel *and* Esc both go
+through the dialog's `close` event, which throws the row away; submitting clears
+`adding` first so the same handler leaves it alone.
+
+**paste-to-fill** parses the pasted text here in the page. No network, no model.
+It is wrong sometimes by design: it fills the form and the person corrects it,
+rather than writing a row behind their back. It cannot read a screenshot — a
+static page has no OCR — and that limit is deliberate, not a to-do.
+
+## The Gmail sweep
+
+Cast wide, then let `extract.js` decide. It has read the thread; a Gmail query
+has only read a subject line.
+
+The one exclusion worth having is `noiseLabel` in rules.json. Gmail's own Jobs /
+LinkedIn / Indeed labels sit on the digest and on the recruiter's reply alike,
+so they cannot tell noise from signal — but a label the owner sweeps the digests
+into themselves can. `labels` is the opposite: extra queries, more candidates in,
+gate unchanged.
+
+Never exclude confirmations or acknowledgements. Those *are* the evidence the
+gate looks for. Filtering them out does not remove noise, it removes the record.
+
+## The CV library
+
+`cvstore.js` keeps the files in IndexedDB and, when signed in, a copy of each
+one plus the index in the same hidden Drive folder the applications back up to.
+That is what makes the library follow you between machines; a build with no
+Google keeps everything on the one machine and still works.
+
+`cvui.js` owns the CV column dropdown. The last group in it is three actions,
+not three CVs — `__cv_open__`, `__cv_upload__`, `__cv_library__` — and app.js
+puts the select back to the row's real value before running any of them, so a
+cancelled upload never changes which CV an application went out with.
+
+The library itself is routed at `#cv-library` rather than being its own page.
+It looks like a page and the back button works, but it stays in the one
+document on purpose: the Google token lives in memory and is never written
+down, so a second page would mean signing in twice to upload one file.
+
+A CV is soft-deleted, like a row. It drops out of the dropdown but stays
+readable, marked `(deleted)`, on the applications that used it — which CV went
+out is a fact about something that already happened.
+
+`app.js` takes its state from the DOM, not from a model. It reads
+`#tb tr` once on start-up, and every feature after that — sort, filter, column
+move, column resize, show/hide, the row editor — works by reading and writing
+`data-*` attributes on those `<tr>` elements. So:
+
+- **Rows must exist before `app.js` runs.** That is why `render.js` is inlined
+  ahead of it rather than fetched.
+- **A new field means a new `data-` attribute**, set in `render.js`'s `rowHtml`,
+  read wherever it is needed, and written back in `persist()`.
+- Column identity is the `data-col` on the `<th>` and the matching `c-*` class
+  on each `<td>`. Show/hide and reordering both key off that, which is why they
+  survive each other.
+
+## Themes
+
+`src/themes/v1.css` and `v2.css` are complete, independent stylesheets over the
+same markup. v2 is the shadcn-flavoured one and the default. Adding a rule to
+one and not the other is the single easiest mistake to make here — if you touch
+a component's styles, touch both files.
+
+Both define a light palette on bare `:root`, then redefine tokens under
+`@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }` and
+again under `:root[data-theme="dark"]`. A colour whose only definition lives
+inside a media block is a bug.
+
+## Conventions worth keeping
+
+- No dependencies in the app. No framework, no bundler, no CDN at runtime except
+  the Google Fonts stylesheet (which has a real fallback stack behind it).
+- ES5-flavoured `var`/`function` inside `app.js`, because it is one long IIFE
+  and mixing styles halfway through reads badly. `build.mjs`, `check.mjs` and
+  the importer are modern ESM — different files, different rules.
+- Markup is built by string concatenation with an `esc()` on every value that
+  came from data. Badge and icon markup is trusted HTML from `config.js` and is
+  deliberately *not* escaped; anything from `applications.json` always is.
+- `npm run check` before you call something done. It builds all three apps and
+  asserts the output is self-contained, parses, and has no malformed rows.
+
+## The v3 pieces
+
+- **`merge.js` is pure and tested** (`npm test`). No DOM, no storage, no
+  network. Anything you add to the refresh behaviour belongs here, with a test,
+  not in gate.js.
+- **A field set by hand is the person's.** `store.markManual(id, field)` records
+  it; the merge then reports it as a conflict rather than overwriting it. When
+  you add a new way to edit a row, call `markManual` from it, or a later refresh
+  will quietly stamp on the edit.
+- **`TrackerApp.reload(rows)` replaces the row set without a page reload.** Use
+  it rather than `location.reload()` — the Google token lives in memory, so a
+  reload signs the person out. It works because every row handler is delegated
+  from the table element, so nothing is bound per row.
+- **`?demo=1` swaps Google for a local stand-in** at the bottom of google.js —
+  a pretend account, sweep and Drive. It is how the flow is tested without a
+  Google project. Keep it working; it is the only way to exercise gate.js
+  headlessly.
+- **Scopes are `gmail.readonly` and `drive.appdata`, and stay that way.** The
+  check script asserts no wider Gmail scope appears in a build.
+- **Deleting is undoable for nine seconds** and records a merge key in
+  `doc.deleted` so a later sweep does not re-add the row. Undo removes that key
+  again.
+
+## Things that will bite
+
+- **Empty data is a supported state.** `apps/sb` ships with `[]`. The carousel,
+  the CV dropdown in the editor and the live list all have guards for it — keep
+  them.
+- **Offline builds have only `localStorage`** — per browser, per device, lost
+  when site data is cleared. The hosted build adds Drive on top; offline does
+  not, deliberately, so it keeps working with no account at all.
+- **The LinkedIn badge is their actual mark**, inlined as a base64 PNG in
+  `config.js`. Every other badge is plain initials on purpose.
+- **Page-initiated downloads don't work inside a Claude artifact.** That is why
+  the cover-letter panel has a Copy button and not a "save as .txt". If you add
+  a download, it will work locally and silently do nothing when published.
+- `appliedSort`/`updatedSort` are what sorting uses. Change a date and you must
+  change both it and its display string, or the table sorts by one and shows the
+  other.
+
+## Gmail
+
+`packages/gmail-import` requests `gmail.readonly` and nothing else. Do not widen
+that scope. Any feature that would need send, reply, draft, label or delete
+access does not belong in this repo.

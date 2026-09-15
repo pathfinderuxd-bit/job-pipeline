@@ -1,0 +1,13 @@
+{
+  "name": "@job-pipeline/gmail-import",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Read-only Gmail sweep that writes an applications.json",
+  "scripts": {
+    "start": "node src/import.mjs"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}
