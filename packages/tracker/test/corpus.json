@@ -230,6 +230,15 @@
       "sender": "jobalerts-noreply@linkedin.com",
       "subject": "Interaction Designer - Remote / Outside IR35 (IT) / Contractor at Foundry Works: up to £400/day",
       "body": "£350-£400 / day salary. See your latest job matches and similar jobs."
+    },
+    {
+      "want": "outcome",
+      "chip": "Rejected",
+      "company": "Calder IT",
+      "sender": "\"Sam Alder - Calder IT\" <sam-alder@calderit.teamtailor-mail.com>",
+      "subject": "Thanks for your interest in joining Calder IT!",
+      "body": "Hi Rich, Thank you for your application to Calder IT. We appreciate you taking the time to apply for the Senior Product Designer role. However, in this instance, we won’t be moving forward with your application.",
+      "note": "The display name is half recruiter, half employer. Taken whole it puts a person in the company column, matches no existing row, and lands as a duplicate."
     }
   ]
 }

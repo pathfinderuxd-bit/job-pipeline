@@ -42,6 +42,19 @@ window.TrackerApp = function(){
   }
   var STATE = loadStore();
 
+  /* The stale badge ("22d") is a child of the updated cell, so reading the
+   * cell's textContent gets "24 Aug22d" — and saving that makes it permanent,
+   * then the next render appends another badge to it, and the next. Two rows
+   * had already reached "24 Aug22d22d22d". markStale stashes the real value on
+   * data-base before it ever appends, so trust that; the trailing strip heals
+   * the rows already corrupted. */
+  function updShownOf(tr) {
+    var cell = tr.querySelector('.c-upd');
+    if (!cell) return '';
+    var base = cell.getAttribute('data-base');
+    return (base === null ? cell.textContent : base).replace(/(\s*\d+d)+$/, '').trim();
+  }
+
   /* Remember that a field was set by hand so a later Gmail sweep treats it as
    * a decision to respect rather than something to quietly overwrite. */
   function markManual(tr, fields){
@@ -60,7 +73,7 @@ window.TrackerApp = function(){
       applied: tr.getAttribute('data-applied'),
       date: tr.getAttribute('data-date'),
       updated: tr.getAttribute('data-updated'),
-      updShown: tr.querySelector('.c-upd').textContent.trim(),
+      updShown: updShownOf(tr),
       via: tr.getAttribute('data-via'),
       viaLabel: tr.querySelector('.c-src .cellf > span:last-child').textContent.trim(),
       co: coOf(tr),
@@ -678,7 +691,7 @@ window.TrackerApp = function(){
     var shown = today.getDate() + ' ' + MON[today.getMonth()];
 
     var html = window.Render.rowHtml({
-      status: 'wait', chip: 'In progress', company: '', role: '',
+      status: 'wait', chip: 'Awaiting', company: '', role: '',
       type: 'Full-Time', source: 'Direct', sourceLabel: 'Direct',
       applied: shown, appliedSort: sortNum, updated: '\u2014', updatedSort: 0,
       note: '', id: 'new-' + Date.now()

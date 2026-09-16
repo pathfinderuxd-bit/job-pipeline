@@ -416,7 +416,7 @@
     /* The rows as they stand, with each row's hand-edits folded in, so the
      * merge knows what is already decided. */
     var edits = store.rows();
-    return (store.applications() || []).map(function (a) {
+    var out = (store.applications() || []).map(function (a) {
       var id = root.Render.idOf(a);
       var e = edits[id];
       if (!e) return a;
@@ -438,6 +438,43 @@
       out.manual = e.manual || {};
       return out;
     });
+
+    /* A row added with the Add button is written into the edits as
+     * new-<timestamp> and never into the application list — and this function,
+     * and the render behind it, only ever walked the application list. So a
+     * row you typed in was there until you reloaded, and then it was gone,
+     * leaving an orphaned edit nobody could see. Adopt those orphans here:
+     * they come back, and everything already lost comes back with them. */
+    var known = {};
+    out.forEach(function (a) { known[root.Render.idOf(a)] = true; });
+    Object.keys(edits).forEach(function (id) {
+      if (known[id]) return;
+      var e = edits[id];
+      if (!e || (!e.co && !e.role)) return;
+      out.push({
+        id: id,
+        status: e.s || 'wait',
+        chip: e.label || 'Awaiting',
+        type: e.type || 'Full-Time',
+        company: e.co || '',
+        role: e.role || '',
+        applied: e.date || '\u2014',
+        appliedSort: Number(e.applied) || 0,
+        updated: e.updShown || '\u2014',
+        updatedSort: Number(e.updated) || 0,
+        source: e.via || 'Direct',
+        sourceLabel: e.viaLabel || e.via || 'Direct',
+        note: e.note || '',
+        cv: e.cv || '', cl: e.cl || '', jd: e.jd || '',
+        star: e.star ? '1' : '',
+        manual: e.manual || {},
+      });
+    });
+    out.sort(function (a, b) {
+      return (Number(b.appliedSort) || 0) - (Number(a.appliedSort) || 0);
+    });
+
+    return out;
   }
 
   function refresh() {

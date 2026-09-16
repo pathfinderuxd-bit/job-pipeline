@@ -75,6 +75,19 @@
     if (!m) return '';
     var name = m[1].trim();
 
+    /* "Sam Alder - Calder IT" is a recruiter writing from calderit.<ats>.com.
+     * The display name is half person, half employer, and taking it whole puts
+     * a person's name in the company column — where it matches no existing row
+     * and becomes a duplicate. If one part of the name is the employer the
+     * domain already names, that part is the answer. */
+    var host = domainOf(sender).split('.')[0];
+    if (host && /[-|,\u2013\u2014]/.test(name)) {
+      var pick = name.split(/\s*[-|,\u2013\u2014]\s*/).filter(function (part) {
+        return slugish(part) && slugish(part) === slugish(host);
+      })[0];
+      if (pick) return pick.trim();
+    }
+
     var boards = [];
     Object.keys(rules.sources).forEach(function (d) {
       if (boards.indexOf(rules.sources[d]) < 0) boards.push(rules.sources[d]);
@@ -93,6 +106,10 @@
 
   /* "at the Rivermead Group" names the Rivermead Group, not the Rivermead
    * Group preceded by an article. */
+  function slugish(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  }
+
   function tidyName(s) {
     return String(s || '').replace(/^\s*the\s+/i, '').replace(/\s+/g, ' ').trim();
   }

@@ -1,5 +1,19 @@
 # Working in this repo
 
+## How the owner wants this done
+
+- **Be concise.** Short answers. No restating the plan, no summarising what was
+  just said, no listing everything that was considered. Findings, then the next
+  action.
+- **Walk through anything operational one step at a time.** One instruction,
+  wait, next. Do not hand over a numbered list of nine things.
+- **Only ask a question when the answer changes what happens next.** Otherwise
+  pick the sensible option, say which in one line, and carry on.
+- **Never push, and never commit without being asked.** Show what changed and
+  wait.
+- **Never send email.** Gmail access is read-only and stays that way.
+- Real application data never reaches the repo or the hosted page.
+
 Read `README.md` first — it covers the layout, the data shape and how to build.
 This file is the stuff that isn't obvious from reading the code.
 
@@ -50,7 +64,18 @@ finished, so neither can go stale. The age badge is written into the Updated
 cell, which means anything that rewrites that cell must also
 `removeAttribute('data-base')` or the badge will be appended to a stale value.
 
+That cell is also read back when a row is saved, so read it through
+`updShownOf()` in app.js and never `textContent` — otherwise the badge is saved
+*into* the date and the next render appends another one. Two rows reached
+`24 Aug22d22d22d` before this was caught.
+
 ## Adding a row by hand
+
+A hand-added row is keyed `new-<timestamp>` and its content lives only in
+`doc.rows` — it is never written into `doc.applications`. `currentRows()` in
+gate.js adopts any such orphan back into the list; without that step every row
+added by hand disappears on the next reload. If you change how rows are stored,
+keep the adoption.
 
 `+ Add` draws a blank row with `Render.rowHtml` — the same renderer as every
 other row, so it carries the same attributes and the same delegated handlers —
@@ -65,17 +90,33 @@ static page has no OCR — and that limit is deliberate, not a to-do.
 
 ## The Gmail sweep
 
+Two passes. The first finds applications, from four nets that are each
+unreliable alone: the wording, the boards and applicant trackers in `sources`,
+the labels in `labels`, and `is:starred`. The second takes every employer with a
+role still open and queries Gmail for their mail directly, narrowed by job
+words. A rejection or an interview invitation usually arrives as its own thread,
+weeks later, with no label and a subject that never says "application" — pass
+one cannot see it and pass two can.
+
 Cast wide, then let `extract.js` decide. It has read the thread; a Gmail query
 has only read a subject line.
 
-The one exclusion worth having is `noiseLabel` in rules.json. Gmail's own Jobs /
-LinkedIn / Indeed labels sit on the digest and on the recruiter's reply alike,
-so they cannot tell noise from signal — but a label the owner sweeps the digests
-into themselves can. `labels` is the opposite: extra queries, more candidates in,
-gate unchanged.
+**There is no sender blocklist and there must not be one.** The same LinkedIn
+address sends "your application was sent to X" and "Acme is hiring"; the same
+Indeed address sends employer decisions and job alerts. That list lost real mail
+three separate times before it was removed.
+
+Gmail label search takes the full path — `JOBS/LinkedIn`, not `LinkedIn` — and a
+parent label does **not** include its children. Two label queries silently
+matched nothing for weeks because of this.
 
 Never exclude confirmations or acknowledgements. Those *are* the evidence the
 gate looks for. Filtering them out does not remove noise, it removes the record.
+
+`test/corpus.json` is the specification: real emails, renamed, each labelled
+acknowledgement / outcome / neither. Change a rule and run `npm test`. When
+something is classified wrongly, the fix is to add that email to the corpus
+first.
 
 ## The CV library
 
