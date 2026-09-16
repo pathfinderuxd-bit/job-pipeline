@@ -13,7 +13,7 @@
  *   hosted             the page starts empty behind a Google sign-in, picks up
  *                      whoever signs in, and can refresh itself from Gmail.
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, copyFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, resolve, basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -129,14 +129,23 @@ const js = head.concat(tail).join('\n\n');
  * literally, so this cannot happen again whatever the code contains. */
 const put = (value) => () => value;
 
+/* The 32px favicon rides inside the HTML so an offline build opened from the
+ * filesystem still gets a tab icon; everything larger is written beside
+ * index.html below, because iOS will not reliably take an apple-touch-icon as
+ * a data URI and a manifest cannot resolve relative icon paths from one. */
+const favicon = readFileSync(join(SRC, 'icons/favicon-32.png')).toString('base64');
+
 const html = read(join(SRC, 'shell.html'))
+  .replace('<link rel="icon" href="favicon.png">',
+           put(`<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,${favicon}">`))
   .replace('<link rel="stylesheet" href="theme.css">', put(`<style>\n${css}\n</style>`))
   .replace('<script src="data.js"></script>\n<script src="app.js"></script>',
            put(`<script>\n${js}\n</script>`))
   .replace('<title id="doc-title">Job Pipeline</title>',
            put(`<title id="doc-title">${site.title ?? 'Job Pipeline'}</title>`));
 
-if (html.includes('<script src=') || html.includes('href="theme.css"')) {
+if (html.includes('<script src=') || html.includes('href="theme.css"') ||
+    html.includes('href="favicon.png"')) {
   console.error('Build failed: shell placeholders did not all get replaced.');
   process.exit(1);
 }
@@ -144,6 +153,28 @@ if (html.includes('<script src=') || html.includes('href="theme.css"')) {
 const out = join(appDir, 'dist');
 mkdirSync(out, { recursive: true });
 writeFileSync(join(out, 'index.html'), html);
+
+/* Home-screen icons and the manifest. The manifest is generated rather than
+ * kept as a file so the name and theme colour cannot drift from the config. */
+const ICONS = ['apple-touch-icon.png', 'icon-192.png', 'icon-512.png',
+               'icon-maskable-512.png'];
+for (const name of ICONS) copyFileSync(join(SRC, 'icons', name), join(out, name));
+
+writeFileSync(join(out, 'manifest.webmanifest'), JSON.stringify({
+  name: site.title ?? 'Job Pipeline',
+  short_name: site.shortName ?? 'Pipeline',
+  start_url: './',
+  scope: './',
+  display: 'standalone',
+  orientation: 'portrait-primary',
+  background_color: config.theme === 'v2' ? '#FAFAF9' : '#FFFFFF',
+  theme_color: '#C2791A',
+  icons: [
+    { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+    { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+  ],
+}, null, 2) + '\n');
 
 const size = `${(html.length / 1024).toFixed(0)}KB`;
 if (hosted) {

@@ -59,7 +59,10 @@ jobs:
       - name: Collect the site
         run: |
           mkdir -p _site
-          cp apps/web/dist/index.html _site/index.html
+          # The whole dist, not just index.html: the home-screen icons and
+          # manifest.webmanifest have to sit next to the page for iOS and
+          # Android to find them.
+          cp apps/web/dist/* _site/
           printf 'User-agent: *\nDisallow: /\n' > _site/robots.txt
 
       - uses: actions/upload-pages-artifact@v3

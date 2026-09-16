@@ -8,6 +8,16 @@
 <meta name="theme-color" content="#C2791A">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Job Pipeline">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- The 32px favicon is inlined at build time so a file:// build keeps it.
+     The bigger icons and the manifest are real files next to index.html:
+     iOS is unreliable about apple-touch-icon as a data URI, and a manifest
+     cannot resolve relative icon paths from one. They 404 harmlessly on
+     file://, where the inlined favicon still applies. -->
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <title id="doc-title">Job Pipeline</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -40,8 +40,16 @@ for (const app of APPS) {
         : []);
 
   check('builds', true);
-  check('self-contained (no external src/href beyond fonts)',
-    !/(?:src|href)="(?!data:|https:\/\/fonts\.)/.test(html));
+  /* The page inlines everything bar its home-screen assets, which have to be
+   * real files beside index.html: iOS will not reliably take an
+   * apple-touch-icon as a data URI, and a manifest cannot resolve relative
+   * icon paths from one. Both are named here rather than waved through by
+   * pattern, so nothing else can slip in as a relative URL. */
+  const SIBLINGS = ['apple-touch-icon.png', 'manifest.webmanifest'];
+  const stray = [...html.matchAll(/(?:src|href)="(?!data:|https:\/\/fonts\.)([^"]*)"/g)]
+    .map((m) => m[1]).filter((u) => !SIBLINGS.includes(u));
+  check('self-contained (bar the home-screen icon and manifest)',
+    stray.length === 0, stray.join(', '));
   check('exactly one style block and one script block',
     (html.match(/<style>/g) ?? []).length === 1 && (html.match(/<script>/g) ?? []).length === 1);
 
