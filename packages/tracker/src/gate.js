@@ -461,9 +461,13 @@
       return root.Google.sweep({
         rules: root.RULES,
         months: cfg.sweepMonths || 6,
-        onProgress: function (done, total) {
-          toast({ id: 'sweep', text: 'Reading your mail… ' + done + ' of ' + total +
-                                     ' threads', tone: 'busy', timeout: 0 });
+        /* The rows already on the page, so the second pass knows which
+         * employers are still worth chasing for a reply. */
+        known: currentRows(),
+        onProgress: function (done, total, stage) {
+          toast({ id: 'sweep', text: (stage || 'Reading your mail') + '… ' + done +
+                                     ' of ' + total + ' threads',
+                  tone: 'busy', timeout: 0 });
         }
       });
     }).then(function (incoming) {

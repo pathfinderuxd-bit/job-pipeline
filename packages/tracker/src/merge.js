@@ -41,6 +41,13 @@
     return slug(row.company) + '::' + roleStem(row.role);
   }
 
+  /* How recent a row is, whatever it carries. A row with no `updated` date is
+   * not old — it is undated, and treating 0 as "older than everything" is how
+   * a fresh rejection got judged stale and dropped. */
+  function recency(r) {
+    return Math.max(Number(r.updatedSort || 0), Number(r.appliedSort || 0));
+  }
+
   function isBlank(v) {
     return v == null || v === '' || v === '—' || v === 0;
   }
@@ -66,6 +73,29 @@
       if (gone[key]) { report.skipped.push({ key: key, row: inc }); return; }
 
       var cur = byKey[key];
+
+      /* No exact company+role match. Employers word the role differently in a
+       * rejection than in the confirmation, or leave it out altogether, so
+       * company+role misses exactly when it matters most and the outcome
+       * lands as a duplicate new row. Before accepting that, look for a role
+       * still open at the same employer. One candidate is an update to it;
+       * more than one is a guess, so it falls through and is offered as a new
+       * row as before. Either way the person still ticks it. */
+      if (!cur && slug(inc.company) &&
+          slug(inc.company) !== slug('(unknown employer)')) {
+        var co = slug(inc.company);
+        var mine = (rows || []).filter(function (r) {
+          return slug(r.company) === co && !gone[keyOf(r)];
+        });
+        /* An open role is the better guess when there is one; failing that, a
+         * single row for this employer is still a far better answer than a
+         * second row for the same job under a slightly different title. Two or
+         * more and it is a guess, so it falls through and is offered as new. */
+        var open = mine.filter(function (r) { return r.status !== 'shut'; });
+        var pick = open.length === 1 ? open[0] : (mine.length === 1 ? mine[0] : null);
+        if (pick) { cur = pick; key = keyOf(cur); }
+      }
+
       if (!cur) { report.added.push(inc); return; }
 
       var fields = [];
@@ -74,11 +104,36 @@
         if (isBlank(to) || String(to) === String(from)) return;
         if (PAIRED[f] && isBlank(inc[PAIRED[f]])) return;
 
-        /* An older sweep must not walk a row backwards. */
-        if ((f === 'updated' || f === 'updatedSort') &&
-            Number(inc.updatedSort || 0) < Number(cur.updatedSort || 0)) return;
+        /* An older sweep must not walk a row backwards — judged on the
+         * newest date either row carries, not on `updated` alone. */
+        if (/^(updated|updatedSort|status|chip)$/.test(f) &&
+            recency(inc) < recency(cur)) return;
+
+        /* `applied` is when you applied, not when you heard back. A rejection
+         * arrives as a thread of its own, so its first message is dated the
+         * day of the decision — left alone, every outcome quietly restamped
+         * the application date. Fill a blank, or correct one backwards when an
+         * earlier confirmation turns up; never move it later. */
+        if ((f === 'applied' || f === 'appliedSort') &&
+            !isBlank(cur.appliedSort) &&
+            Number(inc.appliedSort || 0) >= Number(cur.appliedSort || 0)) return;
+
+        /* "Direct" is what the extractor says when it recognises no job board
+         * — the weakest answer it has — and a curated "LinkedIn → Pinpoint"
+         * records a hand-off whose back half is all the sweep ever sees.
+         * Neither may overwrite a source already named on the page. */
+        if (f === 'sourceLabel') {
+          var named = !isBlank(from) && from !== 'Unknown' &&
+                      String(from).toLowerCase().indexOf('no confirmation') < 0;
+          if (named && (to === 'Direct' || String(from).indexOf('\u2192') > -1)) return;
+        }
+
+        /* An acknowledgement must not reopen a decided row. Employers send
+         * "thank you for applying" boilerplate inside rejection mail, and a
+         * thread read as `wait` should never undo an outcome already on the
+         * page. */
         if ((f === 'status' || f === 'chip') &&
-            Number(inc.updatedSort || 0) < Number(cur.updatedSort || 0)) return;
+            inc.status === 'wait' && cur.status !== 'wait') return;
 
         fields.push({ field: f, from: from, to: to });
       });

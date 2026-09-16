@@ -1,0 +1,235 @@
+{
+  "_comment": "Real mail shapes from a live jobs mailbox, with every employer, person and role renamed. The wording is what matters here and is kept verbatim — the contractions, the typographic apostrophes, the boilerplate an employer buries a rejection inside. Each case says what the gate should make of it: ack (an application was acknowledged), outcome (a decision arrived), or none (an alert, a digest, a match suggestion — never a row). Add a case whenever a real email is classified wrongly; that is the bug report.",
+  "cases": [
+    {
+      "want": "outcome",
+      "chip": "Rejected",
+      "company": "Rivermead Group",
+      "sender": "no-reply@eu.greenhouse-mail.io",
+      "subject": "Your application to the Rivermead Group",
+      "body": "Hi Rich, Thank you for applying to the role of Product Designer: Design Systems (12 month FTC) at the Rivermead Group. We appreciate the time and energy you invested in applying for our job opening. After careful consideration, we regret to inform you that we have decided to proceed with other candidates who better meet the requirements for this role."
+    },
+    {
+      "want": "outcome",
+      "chip": "Rejected",
+      "company": "Calder IT",
+      "sender": "alex-mercer@calderit.teamtailor-mail.com",
+      "subject": "Thanks for your interest in joining Calder IT!",
+      "body": "Hi Rich, Thank you for your application to Calder IT. We appreciate you taking the time to apply for the Senior Product Designer role. However, in this instance, we won’t be moving forward with your application."
+    },
+    {
+      "want": "outcome",
+      "chip": "Rejected",
+      "company": "Kitbag Studio",
+      "sender": "no-reply@kitbagstudio.com",
+      "subject": "Update on your application with Kitbag Studio",
+      "body": "Hey Rich, Thank you so much for your interest in the Lead Product Designer position at Kitbag Studio. After carefully reviewing your application, we have decided not to progress your candidacy for this role."
+    },
+    {
+      "want": "outcome",
+      "chip": "Rejected",
+      "company": "Corvi",
+      "sender": "noreply@indeed.com",
+      "subject": "An update on your application from Corvi",
+      "body": "Hi Rich, Thank you for taking the time to apply for the Sales Designer position with Corvi. After receiving a high volume of applications and completing our recruitment process, we have now decided not to progress your application."
+    },
+    {
+      "want": "outcome",
+      "chip": "Rejected",
+      "company": "Halden Foods",
+      "sender": "charlotte.wright@haldenfoods1.teamtailor-mail.com",
+      "subject": "Thank you for your job application - Halden Foods",
+      "body": "Hi Rich, Thank you for your interest in Halden Foods and for the time you invested in applying for the CRM Manager – 12 Month Maternity Cover / FTC role. After careful consideration, we have decided not to progress your application."
+    },
+    {
+      "want": "outcome",
+      "chip": "Rejected",
+      "company": "Beacon Sports",
+      "sender": "no-reply@ashbyhq.com",
+      "subject": "Beacon Sports: Your Application - Freelance Senior Product Designer",
+      "body": "Hi Rich, We genuinely appreciate the effort you put into your application, and we truly appreciate your interest in joining our team at Beacon Sports. Unfortunately we will not be moving forward with your application for the Freelance Senior Product Designer role."
+    },
+    {
+      "want": "outcome",
+      "chip": "Not shortlisted",
+      "company": "Trellis Trust",
+      "sender": "noreply.ce0867li@webitrent.com",
+      "subject": "Your application to the Designer (FTC) position",
+      "body": "Dear Rich We appreciate your interest in joining Trellis Trust and the time that you have invested in your Designer (FTC) application. Our shortlisting process is now complete, and, on this occasion, you have not been shortlisted."
+    },
+    {
+      "want": "outcome",
+      "chip": "Not shortlisted",
+      "company": "Redgatesearch",
+      "sender": "letstalk@redgatesearch.co.uk",
+      "subject": "An Update on your Application",
+      "body": "Hi Rich, Thank you for taking the time to apply for a role that we are currently advertising. After careful consideration, I am afraid that your CV has not been shortlisted for the role at this time.",
+      "note": "Named from the sender domain as a last resort, so it arrives as one word. The row is flagged for review rather than silently wrong."
+    },
+    {
+      "want": "outcome",
+      "chip": "Rejected",
+      "company": "Fenwick Health",
+      "sender": "noreply@candidates.workablemail.com",
+      "subject": "UX Product Designer - Fenwick Health",
+      "body": "Hi Rich, Thank you for taking the time to apply for the UX Product Designer role at Fenwick Health. We have decided not to move forward with your application on this occasion."
+    },
+    {
+      "want": "ack",
+      "company": "Thornby Media",
+      "sender": "c0714546-66c2-4a3f-a6cf-005068678c20@pinpoint.email",
+      "subject": "Application Received - UX/UI Designer -FTC – 4 months",
+      "body": "Hi Rich, Thank you for your interest in joining Thornby Media. We appreciate the time and effort you have put into your application. We aim to provide feedback on your application within a maximum of 15 days. Please be assured that your application will be considered through a fair and thorough selection process alongside other candidates."
+    },
+    {
+      "want": "ack",
+      "company": "Calder IT",
+      "sender": "no-reply@eu.greenhouse-mail.io",
+      "subject": "Thank you for applying to Calder IT!",
+      "body": "Hi Rich, We are thrilled that you would like to join us here at Calder IT. We received your application for the Senior Product Designer position. We will review your application and aim to come back to you shortly."
+    },
+    {
+      "want": "ack",
+      "company": "Marlowe Group",
+      "sender": "jobs-noreply@linkedin.com",
+      "subject": "Rich, your application was sent to Marlowe Group",
+      "body": "Your application was sent to Marlowe Group. Delivery Lead — London Area, hybrid. Applied on 15 September."
+    },
+    {
+      "want": "ack",
+      "company": "Vellum Health",
+      "sender": "recruiting@campaigns.careers.example-ats.com",
+      "subject": "Your Application with Vellum Health – Confirmation of Application",
+      "body": "Dear Rich , Thank you so much for your interest in the Web UX/UI Design Lead (Fixed Term – 1 Year) role at Vellum Health. We are excited you are considering us."
+    },
+    {
+      "want": "ack",
+      "company": "Northwind Labs",
+      "sender": "no-reply@hire.eu.lever.co",
+      "subject": "Thank you for your application to Northwind Labs",
+      "body": "Dear Rich, Thank you for your recent application for the Design Manager role. We can confirm your submission has been successfully received by our dedicated Talent Team."
+    },
+    {
+      "want": "ack",
+      "company": "Harbourline",
+      "sender": "e+7kahknhdphef7w2d.harbourline@recruitee-mail.com",
+      "subject": "Senior Product Designer - Mobile - 100% Remote - EMEA your application has been submitted. Thank you for considering Harbourline!",
+      "body": "Hi Rich, Thank you for taking the time to explore career opportunities at Harbourline. We wanted to let you know that your application for the Senior Product Designer - Mobile role has been submitted."
+    },
+    {
+      "want": "ack",
+      "company": "Silverbridge",
+      "sender": "loren.lewis@silverbridge.teamtailor-mail.com",
+      "subject": "We have received your application!",
+      "body": "Hi Rich, Thank you for your application. We appreciate your interest in joining us here at Silverbridge. We will review your application for Product Designer - B2B SaaS shortly, and get back to you."
+    },
+    {
+      "want": "none",
+      "why": "match suggestion",
+      "sender": "donotreply@match.indeed.com",
+      "subject": "Lead Product Manager at Ashcroft Motors in Chichester and 8 more new jobs",
+      "body": "Hi Rich, It looks like your background could be a match for this Lead Product Manager role. Please submit a quick application if you have any interest or explore more jobs below."
+    },
+    {
+      "want": "none",
+      "why": "alert created",
+      "sender": "jobalerts-noreply@linkedin.com",
+      "subject": "Rich: your job alert for Design Outside Ir35 in United Kingdom has been created",
+      "body": "See your latest job matches."
+    },
+    {
+      "want": "none",
+      "why": "similar jobs digest",
+      "sender": "jobalerts-noreply@linkedin.com",
+      "subject": "“design systems manager” and similar jobs",
+      "body": "Jobs similar to your alert."
+    },
+    {
+      "want": "none",
+      "why": "hiring digest from the SAME sender as a real confirmation",
+      "sender": "jobs-noreply@linkedin.com",
+      "subject": "Few&Far is hiring for Remote role: Product Designer (Design Systems, AI)",
+      "body": "Few&Far Product Designer (Design Systems, AI) role and more. Jobs you may be a fit for."
+    },
+    {
+      "want": "none",
+      "why": "hiring digest",
+      "sender": "jobs-noreply@linkedin.com",
+      "subject": "Puffy is hiring for Remote role: UI/UX Design Manager",
+      "body": "Jobs you may be a fit for."
+    },
+    {
+      "want": "none",
+      "why": "recruiter newsletter",
+      "sender": "messages-noreply@linkedin.com",
+      "subject": "Application Lead: Commutator Studios hired near you",
+      "body": "Rich, Commutator Studios is a top company hiring for Application Lead roles."
+    },
+    {
+      "want": "none",
+      "why": "profile nag",
+      "sender": "notifications-noreply@linkedin.com",
+      "subject": "You appeared in 4 searches this week",
+      "body": "See who is looking at your profile. Upgrade to premium for more."
+    },
+    {
+      "want": "none",
+      "why": "board digest",
+      "sender": "jobsbyemail@reed.co.uk",
+      "subject": "New jobs matching your search: Product Designer",
+      "body": "12 new jobs matching your saved search. Apply now."
+    },
+    {
+      "want": "none",
+      "why": "not job mail at all",
+      "sender": "no-reply@notifications.example-doorbell.com",
+      "subject": "Please update your payment method",
+      "body": "Your subscription payment was unsuccessful. Please update your payment method."
+    },
+    {
+      "want": "none",
+      "why": "retailer mail using the word unsuccessful",
+      "sender": "payments-update@example-retailer.co.uk",
+      "subject": "Unsuccessful product payment attempt",
+      "body": "Your payment has been declined, Rich. We were unable to process payment for your product."
+    },
+    {
+      "want": "outcome",
+      "chip": "Interview",
+      "company": "Aldermere",
+      "sender": "awi@aldermere.aero",
+      "subject": "Interview Confirmation | Product Design Team Leader at Aldermere",
+      "body": "Hi Rich, Thank you so much for sharing your availability! Your interview is confirmed, here is your interview schedule: Date/Time: Sep 16, 2026 11:45am-12:45pm. Interviewers: the hiring manager for the Product Design Team Leader position."
+    },
+    {
+      "want": "outcome",
+      "chip": "Interview",
+      "company": "Aldermere",
+      "sender": "no-reply@aldermere.aero",
+      "subject": "Interview reminder: Product Design Team Leader at Aldermere",
+      "body": "Hi Rich, Reminder: Your interview with Aldermere for the Product Design Team Leader position is coming up."
+    },
+    {
+      "want": "outcome",
+      "chip": "Screening",
+      "company": "Aldermere",
+      "sender": "awi@aldermere.aero",
+      "subject": "Next steps at Aldermere | Product Design Team Leader",
+      "body": "Hey Rich, Thanks for taking the time to connect with me, I enjoyed getting to know you and your background. As a next step, I would like to setup some time with the hiring manager for this role."
+    },
+    {
+      "want": "none",
+      "why": "an e-signature receipt caught by a company-name query",
+      "sender": "echosign@echosign.com",
+      "subject": "You signed: \"Aldermere NDA\"",
+      "body": "You're all done. Attached is the final agreement for your reference. You're done signing Aldermere NDA. Open agreement."
+    },
+    {
+      "want": "none",
+      "why": "a board digest caught by a company-name query",
+      "sender": "jobalerts-noreply@linkedin.com",
+      "subject": "Interaction Designer - Remote / Outside IR35 (IT) / Contractor at Foundry Works: up to £400/day",
+      "body": "£350-£400 / day salary. See your latest job matches and similar jobs."
+    }
+  ]
+}

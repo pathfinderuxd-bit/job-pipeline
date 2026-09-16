@@ -207,50 +207,105 @@
     var not = rules.noiseLabel ? ' -label:' + rules.noiseLabel.replace(/\s+/g, '-') : '';
     var base = 'after:' + after + ' in:anywhere' + not + ' ';
 
+    /* Pass one: find applications. Four nets, because no single one is
+     * trustworthy — the wording of the mail, the job boards and applicant
+     * trackers it comes from, the labels you file it under, and the star you
+     * put on it. Anything they drag in that is not an application is thrown
+     * out by the gate in extract.js, which has read the thread; a subject line
+     * and a label have not. */
     var queries = [base + '(subject:application OR subject:applying ' +
                    'OR subject:applied OR subject:"thank you for your interest")'];
     Object.keys(rules.sources).forEach(function (d) {
       queries.push(base + 'from:' + d);
     });
-
-    /* Your own labels, as extra input rather than a filter. Anything they drag
-     * in that is not an application is thrown out by the gate in extract.js,
-     * which has read the thread — a subject line has not. */
     (rules.labels || []).forEach(function (label) {
+      /* The full path, and Gmail wants spaces as dashes. A nested label is
+       * JOBS/LinkedIn — querying the parent does not include its children. */
       queries.push(base + 'label:' + String(label).replace(/\s+/g, '-'));
     });
+    queries.push(base + 'is:starred');
 
-    var all = {};
-    return queries.reduce(function (chain, q) {
-      return chain.then(function () {
-        return listThreadIds(q).then(function (ids) {
-          ids.forEach(function (id) { all[id] = true; });
-        });
-      });
-    }, Promise.resolve()).then(function () {
-      var ids = Object.keys(all);
-      var rows = [];
-      var done = 0;
-      if (o.onProgress) o.onProgress(0, ids.length);
+    /* Job words, for narrowing pass two. Plenty of agencies are named after
+     * ordinary nouns, and without these an employer whose name is a common
+     * word drags in half the mailbox. */
+    var JOB_WORDS = '(application OR applying OR applied OR candidacy OR ' +
+                    'interview OR shortlisted OR role OR position)';
 
-      /* Four at a time: fast enough, and well inside Gmail's rate limits. */
+    var seen = {};
+    var rows = [];
+    var done = 0, expected = 0;
+
+    function tell(stage) {
+      if (o.onProgress) o.onProgress(done, Math.max(expected, done), stage);
+    }
+
+    /* Read a batch of threads, four at a time: fast enough, and well inside
+     * Gmail's rate limits. */
+    function readAll(ids, stage) {
+      var queue = ids.slice();
+      expected += queue.length;
+      tell(stage);
       function worker() {
-        if (!ids.length) return Promise.resolve();
-        var id = ids.pop();
+        if (!queue.length) return Promise.resolve();
+        var id = queue.pop();
         return getThread(id).then(function (messages) {
           var row = window.Extract.threadToApplication(messages, rules);
           if (row) rows.push(row);
         }, function () { /* one unreadable thread must not sink the sweep */ })
-          .then(function () {
-            if (o.onProgress) o.onProgress(++done, done + ids.length);
-            return worker();
-          });
+          .then(function () { done++; tell(stage); return worker(); });
       }
+      return Promise.all([worker(), worker(), worker(), worker()]);
+    }
 
-      return Promise.all([worker(), worker(), worker(), worker()]).then(function () {
-        rows.sort(function (a, b) { return (b.appliedSort || 0) - (a.appliedSort || 0); });
-        return rows;
-      });
+    function gather(qs, stage) {
+      var found = [];
+      return qs.reduce(function (chain, q) {
+        return chain.then(function () {
+          return listThreadIds(q).then(function (ids) {
+            ids.forEach(function (id) {
+              if (!seen[id]) { seen[id] = true; found.push(id); }
+            });
+          }, function () { /* a query Gmail dislikes must not sink the sweep */ });
+        });
+      }, Promise.resolve()).then(function () { return readAll(found, stage); });
+    }
+
+    return gather(queries, 'finding applications').then(function () {
+      /* Pass two: chase the follow-ups. Pass one finds the acknowledgement
+       * because it is worded like one and filed like one; the rejection that
+       * comes six weeks later is often neither — no label, no star, a subject
+       * that never says "application". But by now we know the employer's name,
+       * so we can go and ask for it directly. This is the pass that catches
+       * "we have decided not to proceed" and "invite you to interview".
+       *
+       * Only roles still open are worth chasing — a decided row has nothing
+       * left to hear. */
+      var want = {};
+      function consider(r) {
+        if (!r || r.status === 'shut') return;
+        var name = String(r.company || '').trim();
+        if (!name || name.charAt(0) === '(' || name.length < 3) return;
+        want[name.toLowerCase()] = name;
+      }
+      rows.forEach(consider);
+      (o.known || []).forEach(consider);
+
+      var names = Object.keys(want).map(function (k) { return want[k]; }).slice(0, 80);
+      if (!names.length) return;
+
+      /* Eight employers per query. One query per employer would be eighty
+       * round trips; Gmail's OR syntax turns that into ten. */
+      var qs = [];
+      for (var i = 0; i < names.length; i += 8) {
+        var group = names.slice(i, i + 8).map(function (n) {
+          return '"' + n.replace(/["\\]/g, '') + '"';
+        }).join(' OR ');
+        qs.push(base + '(' + group + ') ' + JOB_WORDS);
+      }
+      return gather(qs, 'checking for replies');
+    }).then(function () {
+      rows.sort(function (a, b) { return (b.appliedSort || 0) - (a.appliedSort || 0); });
+      return rows;
     });
   }
 

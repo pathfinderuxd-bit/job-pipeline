@@ -41,7 +41,13 @@
         "book a time",
         "interview confirmed",
         "your interview with",
-        "next stage"
+        "next stage",
+        "interview is confirmed",
+        "interview schedule",
+        "invite you to an interview",
+        "would like to invite you",
+        "interview invitation",
+        "interview reminder"
       ]
     },
     {
@@ -52,7 +58,11 @@
         "initial call",
         "intro call",
         "quick chat",
-        "would love to speak"
+        "would love to speak",
+        "arrange an initial",
+        "set up some time",
+        "availability for a call",
+        "like to setup some time"
       ]
     },
     {
@@ -65,7 +75,12 @@
         "decided not to",
         "will not be moving forward",
         "unable to offer",
-        "regret to inform"
+        "regret to inform",
+        "won't be moving forward",
+        "wont be moving forward",
+        "not be moving forward",
+        "not to move forward",
+        "not moving forward"
       ]
     },
     {
@@ -74,8 +89,10 @@
       "match": [
         "not shortlisted",
         "not been shortlisted",
-        "other candidates",
-        "closer match"
+        "closer match",
+        "with other candidates",
+        "other candidates who",
+        "other candidates whose"
       ]
     },
     {
@@ -107,7 +124,15 @@
         "application submitted",
         "your application to",
         "successfully applied",
-        "application was sent"
+        "application was sent",
+        "confirmation of application",
+        "your application with",
+        "thank you for your application",
+        "thank you for your recent application",
+        "application has been submitted",
+        "received your application",
+        "your submission has been",
+        "application has been received"
       ]
     }
   ],
@@ -149,24 +174,12 @@
     "^(?<company>.+?): (?:Your )?application for (?<role>.+?)$",
     "^Thank you for applying to (?<role>.+?) at (?<company>.+?)$",
     "^(?:Update on your|Your) application (?:for|to) (?<role>.+?)(?: at (?<company>.+?))?$",
-    "^Application received[:–-]\\s*(?<role>.+?)(?: at (?<company>.+?))?$",
-    "^(?<company>.+?) (?:has )?received your application(?: for (?<role>.+?))?$"
+    "^Application received\\s*[:\u2013\u2014-]\\s*(?<role>.+?)(?: at (?<company>.+?))?$",
+    "^(?<company>.+?) (?:has )?received your application(?: for (?<role>.+?))?$",
+    "^Thank you for your (?:job )?application (?:to|with) (?<company>.+?)$",
+    "^Your [Aa]pplication with (?<company>.+?)\\s+[\u2013\u2014-]\\s+.*$"
   ],
-  "_ignoreComment": "Mail from these senders is job-adjacent noise, not an application.",
-  "ignoreSenders": [
-    "alert@indeed.com",
-    "help@welcometothejungle.com",
-    "invitations@linkedin.com",
-    "invitetoapply@indeed.com",
-    "jobalerts-noreply@linkedin.com",
-    "jobs-listings@linkedin.com",
-    "jobsbyemail@reed.co.uk",
-    "messages-noreply@linkedin.com",
-    "news-noreply@linkedin.com",
-    "noreply@indeed.com",
-    "noreply@jobalerts.jobserve.com",
-    "notifications-noreply@linkedin.com"
-  ],
+  "_ignoreComment": "Subjects only. There is deliberately no sender list: LinkedIn sends 'your application was sent to X' and 'Few&Far is hiring' from the same address, and Indeed sends employer decisions from the address its alerts come from. Blocking a sender threw away real mail three times. What an email IS gets decided by reading it \u2014 see the gate in extract.js.",
   "ignoreSubjects": [
     "appeared in",
     "are hiring",
@@ -220,11 +233,14 @@
     "your job search",
     "your weekly"
   ],
-  "_gateComment": "A thread only becomes a row if one of the status patterns above matches somewhere in it. No acknowledgement, no rejection, no interview wording means it is not an application — a job alert, a profile notification, a newsletter. Widening the 'wait' patterns is what to do if a real application is being missed.",
+  "_gateComment": "A thread only becomes a row if one of the status patterns above matches somewhere in it. No acknowledgement, no rejection, no interview wording means it is not an application \u2014 a job alert, a profile notification, a newsletter. Widening the 'wait' patterns is what to do if a real application is being missed.",
   "labels": [
-    "Jobs",
-    "LinkedIn",
-    "Indeed"
+    "JOBS",
+    "JOBS/LinkedIn",
+    "JOBS/Indeed",
+    "JOBS/CW Jobs"
   ],
-  "noiseLabel": "Jobs/Noise"
+  "noiseLabel": "",
+  "_labelComment": "Gmail label search takes the full path: a nested label is JOBS/LinkedIn, not LinkedIn, and querying the parent does NOT include its children. 'label:LinkedIn' and 'label:Indeed' matched nothing at all.",
+  "_noiseComment": "Optional. A label you sweep digests into yourself, excluded from every query. Empty because no such label exists on the account yet."
 }

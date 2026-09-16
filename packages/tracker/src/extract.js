@@ -10,6 +10,10 @@
 (function (root) {
   'use strict';
 
+  /* The vocabulary of an application. Nothing without one of these words is a
+   * row, whatever else it says. */
+  var JOBBISH = /\b(applicat|applying|applied|candidacy|candidate|shortlist|interview|vacancy|\brole\b|\bposition\b|recruit)/i;
+
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -28,16 +32,23 @@
     return hit;
   }
 
+  /* Subjects only, by design. A sender tells you nothing: the address that
+   * sends "your application was sent to X" is the same one that sends "Few&Far
+   * is hiring". Blocking senders lost real confirmations three separate times.
+   * This is a cheap first pass over unambiguous digest wording; the decision
+   * that matters is made further down, having read the thread. */
   function isNoise(msg, rules) {
-    var from = String(msg.sender || '').toLowerCase();
-    var noisy = rules.ignoreSenders.some(function (s) { return from.indexOf(s.toLowerCase()) > -1; });
-    if (noisy) return true;
     var subject = String(msg.subject || '').toLowerCase();
-    return rules.ignoreSubjects.some(function (s) { return subject.indexOf(s) > -1; });
+    return (rules.ignoreSubjects || []).some(function (s) { return subject.indexOf(s) > -1; });
   }
 
   function statusFor(text, rules) {
-    var hay = String(text || '').toLowerCase();
+    /* Employers write "won't be moving forward" with a typographic
+     * apostrophe. Matched against a straight-quoted rule that is simply a
+     * different character, and the rejection reads as an acknowledgement. */
+    var hay = String(text || '').toLowerCase()
+      .replace(/[\u2018\u2019\u02BC]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"');
     for (var i = 0; i < rules.status.length; i++) {
       var rule = rules.status[i];
       for (var j = 0; j < rule.match.length; j++) {
@@ -80,6 +91,58 @@
     return name;
   }
 
+  /* "at the Rivermead Group" names the Rivermead Group, not the Rivermead
+   * Group preceded by an article. */
+  function tidyName(s) {
+    return String(s || '').replace(/^\s*the\s+/i, '').replace(/\s+/g, ' ').trim();
+  }
+
+  /* A rejection often names the role only in the body — the subject is just
+   * "Your application to <employer>". Reading the body is the difference
+   * between landing the outcome on the right row and inventing a new one. */
+  function roleFromBody(body) {
+    var text = String(body || '');
+    var m = text.match(/\b(?:role|position) of\s+([^.\n]{3,80}?)\s+(?:at|with)\b/i) ||
+            text.match(/\bthe\s+([A-Z][^.\n]{3,80}?)\s+(?:position|role)\b/);
+    return m ? m[1].trim() : '';
+  }
+
+  /* Two passes, most reliable first. "at" and "with" are how an employer is
+   * normally named; "joining X" and "interest in X" are the other common
+   * shapes, kept separate because a bare "in" would happily return "London". */
+  function companyFromBody(body) {
+    var text = String(body || '');
+    var NAME = "([A-Z][\\w&.'-]*(?:\\s+[A-Z][\\w&.'-]*){0,3})";
+    var tries = [
+      new RegExp("\\b(?:at|with|to)\\s+(?:the\\s+)?" + NAME + "\\b"),
+      new RegExp("\\b(?:joining|interest in|career at)\\s+(?:the\\s+)?" + NAME + "\\b"),
+    ];
+    for (var i = 0; i < tries.length; i++) {
+      var m = text.match(tries[i]);
+      /* The name can run past the end of its sentence — "Rivermead Group. We
+       * appreciate..." — because a full stop is legal inside an abbreviated
+       * name. Cut at the first sentence break. */
+      if (m) return m[1].split(/\.\s/)[0].replace(/[.,;:]+$/, '').trim();
+    }
+    return '';
+  }
+
+  /* Last resort: the sender's own domain. A recruiter writing from
+   * redgatesearch.co.uk is Redgate Search. Skipped for the job boards and applicant
+   * trackers in rules.sources, whose domain names the tool, not the employer. */
+  function companyFromDomain(sender, rules) {
+    var d = domainOf(sender);
+    if (!d) return '';
+    var known = Object.keys(rules.sources).some(function (dom) {
+      return d === dom || d.slice(-(dom.length + 1)) === '.' + dom;
+    });
+    if (known) return '';
+    var label = d.split('.')[0];
+    if (!label || label.length < 3 || /^\d/.test(label)) return '';
+    if (/^(mail|email|smtp|no.?reply|notifications?|info|hello|careers?|jobs?|apply|talent|hire|hiring|recruit\w*)$/i.test(label)) return '';
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }
+
   function parseSubject(subject, rules) {
     for (var i = 0; i < rules.subjectPatterns.length; i++) {
       var m = String(subject || '').match(new RegExp(rules.subjectPatterns[i]));
@@ -109,6 +172,12 @@
     var first = ordered[0];
     if (!first || isNoise(first, rules)) return null;
 
+    /* Before any of the wording rules get a vote: is this even about a job?
+     * "unsuccessful" is the word a rejection uses and also the word a declined
+     * card payment uses, and no amount of tuning the rejection phrases fixes
+     * that — the thread simply has to be about an application first. */
+    if (!JOBBISH.test(first.subject + '\n' + (first.body || ''))) return null;
+
     var source = sourceFor(first.sender, rules);
     var parsed = parseSubject(first.subject, rules);
 
@@ -118,11 +187,8 @@
      * those come back flagged rather than confidently wrong. */
     var company = parsed.company;
     if (!company) company = companyFromSender(first.sender, rules);
-    if (!company) {
-      var m = String(first.body || '')
-        .match(/\b(?:at|with|to)\s+([A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*){0,3})\b/);
-      company = m ? m[1].trim() : '';
-    }
+    if (!company) company = companyFromBody(first.body);
+    if (!company) company = companyFromDomain(first.sender, rules);
 
     var outcome = null, outcomeAt = null;
     ordered.forEach(function (msg) {
@@ -141,7 +207,23 @@
 
     var final = outcome;
     var role = parsed.role;
-    var moved = outcomeAt && outcomeAt > first.date;
+
+    /* "Your application to the Rivermead Group" parses as a role, because the
+     * pattern behind it reads "Your application to <role>" and cannot tell a
+     * role from an employer. If the body names the same employer, the subject
+     * was naming the company all along — drop the role and find a real one. */
+    if (role && company && tidyName(role).toLowerCase() === tidyName(company).toLowerCase()) {
+      role = '';
+    }
+    if (!role) role = roleFromBody(first.body);
+    company = tidyName(company);
+
+    /* When the outcome is a decision rather than an acknowledgement, its date
+     * is real news even if it arrived as a thread of its own — which is how
+     * almost every rejection arrives. Tying `updated` to "did this thread run
+     * to more than one message" left every one-message rejection dated '—',
+     * and a row dated '—' cannot out-rank the row it is meant to update. */
+    var moved = outcomeAt && (outcomeAt > first.date || final.status !== 'wait');
 
     /* Mail straight from an employer's own careers system is a direct
      * application, not an unknown one. Only a thread we cannot even name is
@@ -169,6 +251,8 @@
   var API = {
     domainOf: domainOf, sourceFor: sourceFor, isNoise: isNoise,
     companyFromSender: companyFromSender,
+    tidyName: tidyName, roleFromBody: roleFromBody,
+    companyFromBody: companyFromBody, companyFromDomain: companyFromDomain,
     statusFor: statusFor, typeFor: typeFor, parseSubject: parseSubject,
     displayDate: displayDate, sortDate: sortDate,
     threadToApplication: threadToApplication
