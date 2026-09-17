@@ -1,8 +1,9 @@
 /* google.js — sign in, read the mailbox, keep a copy in Drive.
  *
- * Nothing is stored. Each click asks Google for a fresh access token and it
- * lives in a variable until the tab closes, which is why you are asked again
- * next time and why switching between accounts needs no "sign out".
+ * The access token is held in sessionStorage, so it survives a refresh and
+ * dies when the tab closes. Nothing else is kept: no refresh token, no
+ * password, and nothing at all once the tab is gone. Google expires the token
+ * after about an hour regardless, so a long session still signs in again.
  *
  * The scopes:
  *   gmail.readonly   read messages. Cannot send, reply, label or delete —
@@ -22,8 +23,39 @@
     'https://www.googleapis.com/auth/drive.appdata'
   ].join(' ');
 
-  var token = null;         // never persisted
-  var account = null;       // the address the token belongs to
+  /* sessionStorage, not localStorage: scoped to this one tab and wiped when it
+   * closes. Every access goes through these two, because the accessors throw
+   * in a private window and on a page with site data blocked. */
+  var TOKEN_KEY = 'job-pipeline/gtoken';
+
+  function remembered() {
+    try {
+      var raw = sessionStorage.getItem(TOKEN_KEY);
+      if (!raw) return null;
+      var o = JSON.parse(raw);
+      /* Google's tokens last about an hour. A minute of margin means a sweep
+       * does not start on a token that expires halfway through it. */
+      if (!o || !o.token || !o.expires || Date.now() > o.expires - 60000) return null;
+      return o;
+    } catch (e) { return null; }
+  }
+
+  function remember(tok, account, expiresIn) {
+    try {
+      sessionStorage.setItem(TOKEN_KEY, JSON.stringify({
+        token: tok, account: account || null,
+        expires: Date.now() + (Number(expiresIn) || 3600) * 1000
+      }));
+    } catch (e) { /* private window, or site data blocked — carry on in memory */ }
+  }
+
+  function forget() {
+    try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) {}
+  }
+
+  var saved = remembered();
+  var token = saved ? saved.token : null;
+  var account = saved ? saved.account : null;   // the address the token belongs to
   var clientId = '';
   var loading = null;
 
@@ -52,6 +84,7 @@
   function signOut() {
     token = null;
     account = null;
+    forget();
   }
 
   /* Ask Google for a token. `select_account consent` means the account chooser
@@ -69,7 +102,11 @@
           scope: SCOPES,
           prompt: 'select_account consent',
           callback: function (resp) {
-            if (resp && resp.access_token) { token = resp.access_token; res(token); }
+            if (resp && resp.access_token) {
+              token = resp.access_token;
+              remember(token, account, resp.expires_in);
+              res(token);
+            }
             else rej(new Error('Sign-in did not complete.'));
           },
           error_callback: function (err) {
@@ -130,7 +167,26 @@
    * identifying the person costs no extra permission. */
   function whoAmI() {
     return api('https://gmail.googleapis.com/gmail/v1/users/me/profile')
-      .then(function (p) { account = p.emailAddress; return account; });
+      .then(function (p) {
+        account = p.emailAddress;
+        /* Re-stamp the stored entry now the address is known, so a refresh
+         * knows who it is without spending a call to find out. */
+        var o = remembered();
+        if (o) remember(token, account, Math.round((o.expires - Date.now()) / 1000));
+        return account;
+      });
+  }
+
+  /* Pick up where the last page load left off, if the tab still holds a live
+   * token. Resolves to null when there is nothing to resume — that is the
+   * ordinary first visit, not an error. The profile call doubles as the check
+   * that Google still honours the token. */
+  function resume() {
+    var o = remembered();
+    if (!o) return Promise.resolve(null);
+    token = o.token;
+    account = o.account;
+    return whoAmI().catch(function () { signOut(); return null; });
   }
 
   function signIn() {
@@ -433,7 +489,7 @@
 
   root.Google = {
     configure: configure, configured: configured,
-    signIn: signIn, signOut: signOut, signedIn: signedIn,
+    signIn: signIn, signOut: signOut, signedIn: signedIn, resume: resume,
     account: currentAccount, sweep: sweep, findFor: findFor,
     drive: { load: driveLoad, save: driveSave },
     files: { loadJson: jsonLoad, saveJson: jsonSave,

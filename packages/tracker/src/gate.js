@@ -234,7 +234,17 @@
     if (btn) btn.disabled = true;
     say('Waiting for Google…');
 
-    root.Google.signIn().then(function (account) {
+    root.Google.signIn().then(afterSignIn).catch(function (err) {
+      if (btn) btn.disabled = false;
+      say(err.message, 'bad');
+    });
+  }
+
+  /* Everything that happens once an address is known, whether the person just
+   * clicked sign in or the tab still held a token from before the refresh. */
+  function afterSignIn(account) {
+    var btn = document.getElementById('gate-signin');
+    return Promise.resolve(account).then(function (account) {
       say('Signed in as ' + account);
       store.open(account);
       store.attachDrive(root.Google.drive);
@@ -761,6 +771,15 @@
 
   root.Google.configure(cfg.googleClientId || '');
   buildGate();
+
+  /* A refresh should not cost a sign-in. The token lives in sessionStorage for
+   * the life of the tab, so if it is still good, go straight in — and if it is
+   * not, the gate is already drawn and waiting. */
+  if (root.Google.resume) {
+    root.Google.resume().then(function (account) {
+      if (account) afterSignIn(account);
+    }).catch(function () { /* fall through to the gate */ });
+  }
 
   if (!root.Google.configured()) {
     var b = document.getElementById('gate-signin');

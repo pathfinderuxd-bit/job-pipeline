@@ -132,8 +132,8 @@ cancelled upload never changes which CV an application went out with.
 
 The library itself is routed at `#cv-library` rather than being its own page.
 It looks like a page and the back button works, but it stays in the one
-document on purpose: the Google token lives in memory and is never written
-down, so a second page would mean signing in twice to upload one file.
+document on purpose: a second page would mean a second sign-in dance to upload
+one file.
 
 A CV is soft-deleted, like a row. It drops out of the dropdown but stays
 readable, marked `(deleted)`, on the applications that used it — which CV went
@@ -187,8 +187,8 @@ inside a media block is a bug.
   you add a new way to edit a row, call `markManual` from it, or a later refresh
   will quietly stamp on the edit.
 - **`TrackerApp.reload(rows)` replaces the row set without a page reload.** Use
-  it rather than `location.reload()` — the Google token lives in memory, so a
-  reload signs the person out. It works because every row handler is delegated
+  it rather than `location.reload()`: it is instant, and it keeps scroll, sort
+  and filter state. It works because every row handler is delegated
   from the table element, so nothing is bound per row.
 - **`?demo=1` swaps Google for a local stand-in** at the bottom of google.js —
   a pretend account, sweep and Drive. It is how the flow is tested without a
@@ -196,6 +196,11 @@ inside a media block is a bug.
   headlessly.
 - **Scopes are `gmail.readonly` and `drive.appdata`, and stay that way.** The
   check script asserts no wider Gmail scope appears in a build.
+- **The access token lives in `sessionStorage`, for the life of the tab.** That
+  is the only thing stored: no refresh token, nothing that outlives the tab.
+  `Google.resume()` picks it up on boot so a refresh does not cost a sign-in,
+  and every read and write of it is wrapped, because the accessors throw in a
+  private window. Google expires it after about an hour anyway.
 - **Deleting is undoable for nine seconds** and records a merge key in
   `doc.deleted` so a later sweep does not re-add the row. Undo removes that key
   again.
