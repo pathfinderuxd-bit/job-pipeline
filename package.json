@@ -1,7 +1,7 @@
 {
   "name": "job-pipeline",
   "private": true,
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "Job application tracker \u2014 one app, one dataset per person",
   "type": "module",
   "workspaces": [

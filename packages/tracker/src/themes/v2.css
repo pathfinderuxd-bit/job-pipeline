@@ -1363,9 +1363,20 @@ dialog.cvl{max-height:min(86vh,900px)}
   display:flex;
   align-items:center;
   justify-content:center;
-  background:var(--ground);
+  /* Not quite opaque, and blurred: the page behind reads as present but not
+     legible, so this covers the flash without pretending nothing is there.
+     color-mix keeps it one declaration per theme — the alpha rides on whatever
+     --ground resolves to. Safari needs the -webkit- prefix. */
+  background:color-mix(in srgb, var(--ground) 90%, transparent);
+  -webkit-backdrop-filter:blur(18px) saturate(115%);
+  backdrop-filter:blur(18px) saturate(115%);
   opacity:1;
   transition:opacity .28s ease;
+}
+/* Anything that cannot do color-mix gets the solid ground rather than a
+   see-through overlay with unreadable text behind it. */
+@supports not (background:color-mix(in srgb, red 50%, transparent)){
+  .splash{background:var(--ground)}
 }
 .splash-pin{
   width:96px;height:96px;
@@ -1374,9 +1385,11 @@ dialog.cvl{max-height:min(86vh,900px)}
   border-radius:50%;
   animation:splash-breathe 1.6s ease-in-out infinite;
 }
+/* Scale only. The mark never loses opacity — the ground behind it is the
+   translucent part, the logo itself stays solid. */
 @keyframes splash-breathe{
-  0%,100%{opacity:1;transform:scale(1)}
-  50%{opacity:.72;transform:scale(.955)}
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(.955)}
 }
 .splash.gone{opacity:0;pointer-events:none}
 /* Removed from the flow once faded, so it can never trap a click. */
