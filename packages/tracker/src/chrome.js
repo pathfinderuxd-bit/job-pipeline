@@ -23,7 +23,20 @@
    * and the load fallback covers an offline build, which has no gate at all,
    * and any path added later that forgets to call it. */
   var splashGone = false;
-  function hideSplash() {
+  var splashHeld = false;
+
+  /* Sign-in is slower than `load`: the token check and the Drive sync both
+   * happen after it. Without this the fallback took the splash away first and
+   * the sign-in card showed for a beat before the rows arrived — the exact
+   * flash the splash exists to cover. gate.js holds it while it works, and
+   * the cap below means a hold can never strand the page behind it. */
+  function holdSplash(ms) {
+    splashHeld = true;
+    setTimeout(function () { splashHeld = false; hideSplash(); }, ms || 12000);
+  }
+
+  function hideSplash(force) {
+    if (splashHeld && !force) return;
     if (splashGone) return;
     splashGone = true;
     var el = document.getElementById('splash');
@@ -38,6 +51,7 @@
   window.addEventListener('load', function () { setTimeout(hideSplash, 1200); });
 
   root.hideSplash = hideSplash;
+  root.holdSplash = holdSplash;
 
   var ORDER = ['auto', 'light', 'dark'];
 

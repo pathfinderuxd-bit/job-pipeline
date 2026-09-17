@@ -98,6 +98,9 @@
   /* ------------------------------------------------------- baseline pick -- */
 
   function chooseBaseline() {
+    /* The other real ending: signed in, but there is nothing to show yet, so
+     * the choice card is what the person is waiting for. */
+    if (root.hideSplash) root.hideSplash(true);
     var card = gate.querySelector('.gate-card');
     card.innerHTML = '';
     card.appendChild(el('div', 'gate-eyebrow', root.Google.account() || ''));
@@ -403,7 +406,7 @@
 
   function start() {
     closeGate();
-    if (root.hideSplash) root.hideSplash();
+    if (root.hideSplash) root.hideSplash(true);
     var rows = adopt((store.applications() || []).slice(), store.rows());
     /* Two timestamps, two meanings: the masthead says when your rows last
      * changed, the build line at the bottom says when this page was deployed.
@@ -777,11 +780,13 @@
    * the life of the tab, so if it is still good, go straight in — and if it is
    * not, the gate is already drawn and waiting. */
   if (root.Google.resume && root.Google.configured()) {
+    /* Held until one of the two endings below, or the cap inside holdSplash. */
+    if (root.holdSplash) root.holdSplash();
     root.Google.resume().then(function (account) {
       if (account) afterSignIn(account);
-      else if (root.hideSplash) root.hideSplash();
+      else if (root.hideSplash) root.hideSplash(true);
     }).catch(function () {
-      if (root.hideSplash) root.hideSplash();
+      if (root.hideSplash) root.hideSplash(true);
     });
   } else if (root.hideSplash) {
     root.hideSplash();
