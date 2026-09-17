@@ -1349,3 +1349,39 @@ dialog.cvl{max-height:min(86vh,900px)}
   .brand{flex:0 0 auto;min-width:auto}
   .chrome-actions{flex:1 1 auto}
 }
+
+/* ---------------------------------------------------------------- splash --
+ * Covers the moment between "page arrived" and "rows are on screen". With a
+ * live token that moment is a sign-in card appearing and vanishing again,
+ * which reads as a glitch; the mark reads as loading. It takes its ground from
+ * the theme tokens, so it is right in both without a second image.
+ */
+.splash{
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--ground);
+  opacity:1;
+  transition:opacity .28s ease;
+}
+.splash-pin{
+  width:96px;height:96px;
+  /* The mark is drawn on white. On a dark ground that square would show, so
+     it is masked to a circle. */
+  border-radius:50%;
+  animation:splash-breathe 1.6s ease-in-out infinite;
+}
+@keyframes splash-breathe{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.72;transform:scale(.955)}
+}
+.splash.gone{opacity:0;pointer-events:none}
+/* Removed from the flow once faded, so it can never trap a click. */
+.splash[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){
+  .splash{transition:none}
+  .splash-pin{animation:none}
+}

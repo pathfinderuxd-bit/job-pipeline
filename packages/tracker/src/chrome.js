@@ -18,6 +18,27 @@
    * light, a prefers-color-scheme block for the un-stamped default, and a
    * [data-theme] block that beats both — so "follow the system" is a real
    * setting and not just "light". */
+  /* The splash goes when the page has something real to show. gate.js calls
+   * this from both of its endings — rows drawn, or the sign-in card offered —
+   * and the load fallback covers an offline build, which has no gate at all,
+   * and any path added later that forgets to call it. */
+  var splashGone = false;
+  function hideSplash() {
+    if (splashGone) return;
+    splashGone = true;
+    var el = document.getElementById('splash');
+    if (!el) return;
+    el.classList.add('gone');
+    var done = function () { el.hidden = true; };
+    el.addEventListener('transitionend', done, { once: true });
+    /* transitionend never fires when the transition is off — reduced motion,
+     * or an already-hidden tab. */
+    setTimeout(done, 400);
+  }
+  window.addEventListener('load', function () { setTimeout(hideSplash, 1200); });
+
+  root.hideSplash = hideSplash;
+
   var ORDER = ['auto', 'light', 'dark'];
 
   var ICONS = {

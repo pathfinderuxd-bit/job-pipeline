@@ -26,6 +26,14 @@
 <link rel="stylesheet" href="theme.css">
 </head>
 <body>
+
+<!-- Painted before any script runs, so a reload with a live token shows the
+     mark rather than a flash of the sign-in card. build.mjs inlines the image;
+     gate.js takes it away. -->
+<div class="splash" id="splash" role="status" aria-label="Loading">
+  <img class="splash-pin" src="splash.png" alt="" width="96" height="96">
+</div>
+
 <div class="wrap">
 
   <header class="mast">

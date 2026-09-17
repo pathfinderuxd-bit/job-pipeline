@@ -134,10 +134,14 @@ const put = (value) => () => value;
  * index.html below, because iOS will not reliably take an apple-touch-icon as
  * a data URI and a manifest cannot resolve relative icon paths from one. */
 const favicon = readFileSync(join(SRC, 'icons/favicon-32.png')).toString('base64');
+/* The splash mark. Inlined rather than linked so it is on screen in the first
+ * paint — a splash that has to be fetched is not a splash. */
+const splash = readFileSync(join(SRC, 'icons/icon-192.png')).toString('base64');
 
 const html = read(join(SRC, 'shell.html'))
   .replace('<link rel="icon" href="favicon.png">',
            put(`<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,${favicon}">`))
+  .replace('src="splash.png"', put(`src="data:image/png;base64,${splash}"`))
   .replace('<link rel="stylesheet" href="theme.css">', put(`<style>\n${css}\n</style>`))
   .replace('<script src="data.js"></script>\n<script src="app.js"></script>',
            put(`<script>\n${js}\n</script>`))
@@ -145,7 +149,7 @@ const html = read(join(SRC, 'shell.html'))
            put(`<title id="doc-title">${site.title ?? 'Job Pipeline'}</title>`));
 
 if (html.includes('<script src=') || html.includes('href="theme.css"') ||
-    html.includes('href="favicon.png"')) {
+    html.includes('href="favicon.png"') || html.includes('src="splash.png"')) {
   console.error('Build failed: shell placeholders did not all get replaced.');
   process.exit(1);
 }

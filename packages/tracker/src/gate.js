@@ -403,6 +403,7 @@
 
   function start() {
     closeGate();
+    if (root.hideSplash) root.hideSplash();
     var rows = adopt((store.applications() || []).slice(), store.rows());
     /* Two timestamps, two meanings: the masthead says when your rows last
      * changed, the build line at the bottom says when this page was deployed.
@@ -775,10 +776,15 @@
   /* A refresh should not cost a sign-in. The token lives in sessionStorage for
    * the life of the tab, so if it is still good, go straight in — and if it is
    * not, the gate is already drawn and waiting. */
-  if (root.Google.resume) {
+  if (root.Google.resume && root.Google.configured()) {
     root.Google.resume().then(function (account) {
       if (account) afterSignIn(account);
-    }).catch(function () { /* fall through to the gate */ });
+      else if (root.hideSplash) root.hideSplash();
+    }).catch(function () {
+      if (root.hideSplash) root.hideSplash();
+    });
+  } else if (root.hideSplash) {
+    root.hideSplash();
   }
 
   if (!root.Google.configured()) {
