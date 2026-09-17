@@ -166,7 +166,9 @@ writeFileSync(join(out, 'manifest.webmanifest'), JSON.stringify({
   start_url: './',
   scope: './',
   display: 'standalone',
-  orientation: 'portrait-primary',
+  /* No orientation key. Setting one locks the installed app to that
+     orientation and kills auto-rotate; the layout works at any width, so
+     let the device decide. */
   background_color: config.theme === 'v2' ? '#FAFAF9' : '#FFFFFF',
   theme_color: '#C2791A',
   icons: [
