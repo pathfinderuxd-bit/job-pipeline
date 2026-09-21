@@ -235,6 +235,7 @@
           var h = m.payload && m.payload.headers;
           return {
             threadId: id,
+            labels: m.labelIds || [],
             sender: header(h, 'from'),
             subject: header(h, 'subject'),
             date: new Date(Number(m.internalDate)),
@@ -260,17 +261,45 @@
      * so ask Gmail which labels are there first and drop any that are not.
      * No label is used to *find* mail any more: filtering in by label cost
      * more real mail than it caught. */
-    var base, queries;
+    var base, queries, labelName = {};
+
+    /* A JOBS/* label says where the job was found, even when the mail comes
+     * from the employer's tracker: WTTJ → Workable. Decoration only — it never
+     * decides whether a thread is kept. */
+    var BOARDS = {};
+    Object.keys(rules.boardLabels || {}).forEach(function (k) { BOARDS[k.toLowerCase()] = rules.boardLabels[k]; });
+    function flat(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ''); }
+    function sameBoard(source, board) {
+      var a = flat(source), b = flat(board);
+      return !a || a === b || a === 'unknown' ||
+             (b === 'wttj' && a === 'welcometothejungle');
+    }
+    function withBoard(row, messages) {
+      if (!row) return row;
+      var board = '';
+      messages.some(function (m) {
+        return (m.labels || []).some(function (id) {
+          var b = BOARDS[String(labelName[id] || '').toLowerCase()];
+          if (b) { board = b; return true; }
+          return false;
+        });
+      });
+      if (board) row.sourceLabel = sameBoard(row.source, board) ? board : board + ' \u2192 ' + row.source;
+      return row;
+    }
     function prepare() {
       var wanted = (rules.excludeLabels || []).map(function (l) { return String(l).trim(); })
                                               .filter(Boolean);
-      var check = wanted.length
-        ? api('https://gmail.googleapis.com/gmail/v1/users/me/labels').then(function (d) {
-            var have = {};
-            (d.labels || []).forEach(function (l) { have[String(l.name).toLowerCase()] = true; });
-            return wanted.filter(function (l) { return have[l.toLowerCase()]; });
-          }, function () { return []; })
-        : Promise.resolve([]);
+      /* One call for the label list serves two jobs: which exclusions exist,
+       * and the names behind the label ids each message carries. */
+      var check = api('https://gmail.googleapis.com/gmail/v1/users/me/labels').then(function (d) {
+        var have = {};
+        (d.labels || []).forEach(function (l) {
+          have[String(l.name).toLowerCase()] = true;
+          labelName[l.id] = String(l.name);
+        });
+        return wanted.filter(function (l) { return have[l.toLowerCase()]; });
+      }, function () { return []; });
       return check.then(function (present) {
         var not = present.map(function (l) {
           return ' -label:"' + l.replace(/"/g, '').replace(/\s+/g, '-') + '"';
@@ -314,7 +343,7 @@
         if (!queue.length) return Promise.resolve();
         var id = queue.pop();
         return getThread(id).then(function (messages) {
-          var row = window.Extract.threadToApplication(messages, rules);
+          var row = withBoard(window.Extract.threadToApplication(messages, rules), messages);
           if (row) rows.push(row);
         }, function () { /* one unreadable thread must not sink the sweep */ })
           .then(function () { done++; tell(stage); return worker(); });

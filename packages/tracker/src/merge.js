@@ -74,6 +74,22 @@
 
       var cur = byKey[key];
 
+      /* Same role, and one employer name is the other with words added —
+       * "Rivermead" and "Rivermead Group", "Corvi" and "Corvi Ltd". Boards and
+       * trackers shorten names differently; without this the same application
+       * lands twice. Whole words only, so "Corvi" never matches "Corvina". */
+      if (!cur) {
+        var co0 = slug(inc.company), stem0 = roleStem(inc.role);
+        (rows || []).some(function (r) {
+          var co1 = slug(r.company);
+          if (!co0 || !co1 || roleStem(r.role) !== stem0 || gone[keyOf(r)]) return false;
+          if (co1.indexOf(co0 + '-') === 0 || co0.indexOf(co1 + '-') === 0) {
+            cur = r; key = keyOf(r); return true;
+          }
+          return false;
+        });
+      }
+
       /* No exact company+role match. Employers word the role differently in a
        * rejection than in the confirmation, or leave it out altogether, so
        * company+role misses exactly when it matters most and the outcome

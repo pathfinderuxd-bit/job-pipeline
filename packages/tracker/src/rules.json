@@ -180,7 +180,8 @@
     "^Your [Aa]pplication with (?<company>.+?)\\s+[–—-]\\s+.*$",
     "^Thanks for applying to (?<company>.+?)!?$",
     "^Thank you for applying to (?<company>[^,]+?)!?$",
-    "^(?![^-–—]*[Aa]pplication)(?<role>[^-–—:]{3,80}?)\\s+[-–—]\\s+(?<company>[A-Z][\\w&.' ]{1,40})$"
+    "^(?![^-–—]*[Aa]pplication)(?<role>[^-–—:]{3,80}?)\\s+[-–—]\\s+(?<company>[A-Z][\\w&.' ]{1,40})$",
+    "^What happened to your application at (?<company>.+?)\\??$"
   ],
   "_ignoreComment": "Subjects only. There is deliberately no sender list: LinkedIn sends 'your application was sent to X' and 'Few&Far is hiring' from the same address, and Indeed sends employer decisions from the address its alerts come from. Blocking a sender threw away real mail three times. What an email IS gets decided by reading it — see the gate in extract.js.",
   "ignoreSubjects": [
@@ -267,5 +268,17 @@
     "interview",
     "talent interview",
     "an interview"
-  ]
+  ],
+  "_boardComment": "Your JOBS/* labels say where you found a job, even when the email comes from the employer's tracker. A thread carrying one of these labels is shown as board → tracker (WTTJ → Workable). Labels only decorate the source; they never decide whether a thread is kept. A source already showing an arrow is left alone.",
+  "boardLabels": {
+    "JOBS/WTTJ": "WTTJ",
+    "JOBS/LinkedIn": "LinkedIn",
+    "JOBS/Indeed": "Indeed",
+    "JOBS/Reed": "Reed",
+    "JOBS/JobServe": "JobServe",
+    "JOBS/CW Jobs": "CW Jobs",
+    "JOBS/Adzuna (ApplyIQ)": "Adzuna ApplyIQ",
+    "JOBS/Jobgether": "Jobgether",
+    "JOBS/Gov UK": "Gov UK"
+  }
 }

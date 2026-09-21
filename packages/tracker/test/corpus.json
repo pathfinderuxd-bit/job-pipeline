@@ -308,6 +308,36 @@
       "subject": "Thank you for your application to Harrow Analytics",
       "body": "Hi Rich, Thank you for your interest in Harrow Analytics! We wanted to let you know we received your application for Senior Product Designer, and we are delighted that you would consider joining.",
       "note": "Lever. The role is only in the body."
+    },
+    {
+      "want": "ack",
+      "company": "Calder IT",
+      "sender": "\"Welcome to the Jungle\" <help@welcometothejungle.com>",
+      "subject": "Application Received: Senior Product Designer at Calder IT",
+      "body": "Your application has been sent to Calder IT",
+      "note": "WTTJ capitalises Received. Subject patterns ignore case."
+    },
+    {
+      "want": "ack",
+      "company": "Foundry Works",
+      "sender": "\"Welcome to the Jungle\" <help@welcometothejungle.com>",
+      "subject": "What happened to your application at Foundry Works?",
+      "body": "Hi Rich, you recently applied for a job on Welcome to the Jungle: Lead Forward Deployed Designer What happened next with your application? Please check your spam/junk folder",
+      "note": "WTTJ's nudge. Named from the subject, role from the body, so it lands on the existing row."
+    },
+    {
+      "want": "none",
+      "why": "WTTJ saved-jobs nudge",
+      "sender": "\"Welcome to the Jungle\" <help@welcometothejungle.com>",
+      "subject": "Rich, still interested in working at Brightmoor?",
+      "body": "Roles on Welcome to the Jungle are typically only live for 3-4 weeks. We recommend applying for the 11 live jobs in your Saved section soon."
+    },
+    {
+      "want": "none",
+      "why": "WTTJ match digest",
+      "sender": "\"Welcome to the Jungle\" <help@welcometothejungle.com>",
+      "subject": "New match: Senior Product Designer at Tallyworks",
+      "body": "There are new jobs matching your search preferences, Rich! Tallyworks Senior Product Designer. See all top matches."
     }
   ]
 }

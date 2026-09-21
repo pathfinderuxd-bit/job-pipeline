@@ -39,7 +39,7 @@
    * that matters is made further down, having read the thread. */
   function isNoise(msg, rules) {
     var subject = String(msg.subject || '').toLowerCase();
-    return (rules.ignoreSubjects || []).some(function (s) { return subject.indexOf(s) > -1; });
+    return (rules.ignoreSubjects || []).some(function (s) { return s && subject.indexOf(String(s).toLowerCase()) > -1; });
   }
 
   /* Case-insensitive, typographic quotes flattened — the same treatment the
@@ -63,7 +63,7 @@
     for (var i = 0; i < rules.status.length; i++) {
       var rule = rules.status[i];
       for (var j = 0; j < rule.match.length; j++) {
-        if (hay.indexOf(rule.match[j]) > -1) return { status: rule.status, chip: rule.chip };
+        if (rule.match[j] && hay.indexOf(String(rule.match[j]).toLowerCase()) > -1) return { status: rule.status, chip: rule.chip };
       }
     }
     return null;
@@ -146,13 +146,35 @@
   /* A rejection often names the role only in the body — the subject is just
    * "Your application to <employer>". Reading the body is the difference
    * between landing the outcome on the right row and inventing a new one. */
+  /* Every lead-in word below matches in any case — "at", "AT", "At". What
+   * stays case-sensitive is the name being captured: a capital is the only
+   * signal telling a name ("at Rivermead Group") from ordinary words ("at the
+   * moment", "Rivermead and for"). A whole-pattern /i flag loses that, so the
+   * lead-in words are spelled out letter by letter as [Aa][Tt] instead. */
+  function ci(words) {
+    return String(words).replace(/[a-z]/gi, function (c) {
+      return '[' + c.toLowerCase() + c.toUpperCase() + ']';
+    });
+  }
+  function any(list) { return '(?:' + list.map(ci).join('|') + ')'; }
+  var NAME = "([A-Z0-9][\\w&.'-]*(?:\\s+[A-Z0-9][\\w&.'-]*){0,3})";
+  var TITLE = "([A-Z][^.\\n]{3,80}?)";
+
   function roleFromBody(body) {
     var text = String(body || '');
-    var m = text.match(/\b(?:role|position) of\s+([^.\n]{3,80}?)\s+(?:at|with)\b/i) ||
-            text.match(/\bthe\s+([A-Z][^.\n]{3,80}?)\s+(?:position|role|job)\b/) ||
-            /* "received your application for Senior Product Designer, and" */
-            text.match(/\bapplication for\s+(?:the\s+)?([A-Z][^.,\n]{2,80}?)(?:\s+(?:job|position|role))?\s*[,.]/);
-    return m ? m[1].trim() : '';
+    var tries = [
+      "\\b" + any(['role', 'position']) + "\\s+" + ci('of') + "\\s+([^.\\n]{3,80}?)\\s+" + any(['at', 'with']) + "\\b",
+      "\\b" + ci('the') + "\\s+" + TITLE + "\\s+" + any(['position', 'role', 'job']) + "\\b",
+      /* WTTJ: "you recently applied for a job on Welcome to the Jungle: Lead Designer What happened…" */
+      "\\b" + ci('applied for a job on') + " [^:\\n]{3,40}:\\s*([A-Z][^.?\\n]{2,80}?)(?=\\s+" + ci('what happened') + "|[.?\\n]|$)",
+      /* "received your application for Senior Product Designer, and" */
+      "\\b" + ci('application for') + "\\s+(?:" + ci('the') + "\\s+)?([A-Z][^.,\\n]{2,80}?)(?:\\s+" + any(['job', 'position', 'role']) + ")?\\s*[,.]"
+    ];
+    for (var i = 0; i < tries.length; i++) {
+      var m = text.match(new RegExp(tries[i]));
+      if (m) return m[1].trim();
+    }
+    return '';
   }
 
   /* Two passes, most reliable first. "at" and "with" are how an employer is
@@ -160,13 +182,12 @@
    * shapes, kept separate because a bare "in" would happily return "London". */
   function companyFromBody(body) {
     var text = String(body || '');
-    var NAME = "([A-Z][\\w&.'-]*(?:\\s+[A-Z][\\w&.'-]*){0,3})";
     var tries = [
-      new RegExp("\\b(?:at|with|to)\\s+(?:the\\s+)?" + NAME + "\\b"),
-      new RegExp("\\b(?:joining|interest in|career at)\\s+(?:the\\s+)?" + NAME + "\\b"),
+      "\\b" + any(['at', 'with', 'to']) + "\\s+(?:" + ci('the') + "\\s+)?" + NAME + "\\b",
+      "\\b" + any(['joining', 'interest in', 'career at']) + "\\s+(?:" + ci('the') + "\\s+)?" + NAME + "\\b"
     ];
     for (var i = 0; i < tries.length; i++) {
-      var m = text.match(tries[i]);
+      var m = text.match(new RegExp(tries[i]));
       /* The name can run past the end of its sentence — "Rivermead Group. We
        * appreciate..." — because a full stop is legal inside an abbreviated
        * name. Cut at the first sentence break. */
@@ -193,7 +214,7 @@
 
   function parseSubject(subject, rules) {
     for (var i = 0; i < rules.subjectPatterns.length; i++) {
-      var m = String(subject || '').match(new RegExp(rules.subjectPatterns[i]));
+      var m = String(subject || '').match(new RegExp(rules.subjectPatterns[i], 'i'));
       if (m && m.groups) {
         var role = String(m.groups.role || '').trim().replace(/\s*[-–—]\s*$/, '');
         var company = String(m.groups.company || '').trim();

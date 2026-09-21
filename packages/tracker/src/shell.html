@@ -81,6 +81,17 @@
   <section>
     <h2>All applications</h2>
     <div class="bar">
+      <div class="search" role="search">
+        <svg class="search-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" autocomplete="off" spellcheck="false"
+               placeholder="Search company, role, notes…   try via:wttj"
+               aria-label="Search applications" aria-describedby="q-hint">
+        <kbd class="search-k" aria-hidden="true">/</kbd>
+        <button type="button" class="search-x" id="q-x" aria-label="Clear search" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+        <span class="sr-only" id="q-hint">Every word must match, in any case. Quote a phrase. Start a word with a minus to exclude it. Narrow to one column with company:, role:, via:, type:, status: or note:.</span>
+      </div>
       <button type="button" class="qf" id="qf-all" data-f="all" aria-pressed="true">All</button>
       <button type="button" class="qf" id="qf-live" data-f="live" aria-pressed="false"><span class="dot dot-live"></span>Live</button>
       <button type="button" class="qf" id="qf-lead" data-f="lead" aria-pressed="false"><span class="dot dot-lead"></span>In progress</button>

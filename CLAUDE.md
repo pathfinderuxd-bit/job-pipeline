@@ -243,3 +243,21 @@ inside a media block is a bug.
 `packages/gmail-import` requests `gmail.readonly` and nothing else. Do not widen
 that scope. Any feature that would need send, reply, draft, label or delete
 access does not belong in this repo.
+
+## Search
+
+The filter bar leads with a search box (`#q`, `filters.q` in app.js). Every
+word must match, in any case, accents ignored; "quoted" is a phrase; a leading
+minus excludes; `company: role: via: type: status: note: date:` narrow a word
+to one column. The index is the row's own textContent plus the status words
+for its `data-s`, so there is nothing extra to keep in sync. `/` focuses it,
+Esc clears it, and Clear filters clears it with everything else.
+
+## Case
+
+Every match in the sweep ignores case: keyword lists, ignoreSubjects, status
+phrases, subject patterns, JOBS/* label names, and the lead-in words the
+extractor looks for. The one exception is on purpose — the captured employer or
+role must start with a capital, because that is all that tells "at Rivermead"
+from "at the moment". A whole-pattern /i flag loses that; the lead-in words are
+spelled out as [Aa][Tt] via ci() instead.

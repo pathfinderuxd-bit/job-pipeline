@@ -36,6 +36,12 @@ var RANK = { live: 0, lead: 1, wait: 2, shut: 3 };
     return /[a-z0-9]/i.test(ch) ? ch.toUpperCase() : '\u2014';
   }
 
+  /* The board's full name is long for a column this narrow, and the rest of
+   * the table already says WTTJ. */
+  function viaText(a) {
+    return String(a.sourceLabel || a.source || '').replace(/\bWelcome to the Jungle\b/g, 'WTTJ');
+  }
+
   function idOf(a) {
     return a.id || slug(a.company || '', a.role || '', a.applied || '');
   }
@@ -95,7 +101,7 @@ var RANK = { live: 0, lead: 1, wait: 2, shut: 3 };
       '<td class="c-type"><span class="cellf"><span class="tyi">' + icon +
         '</span><span>' + esc(type) + '</span></span></td>' +
       '<td class="c-src"><span class="cellf"><span class="vlogo ' + badge[1] + '">' + badge[0] +
-        '</span><span>' + esc(a.sourceLabel || a.source || '') + '</span></span></td>' +
+        '</span><span>' + esc(viaText(a)) + '</span></span></td>' +
       '<td class="c-upd">' + esc(a.updated || '—') + '</td>' +
       '<td class="c-cl"><button type="button" class="clbtn">Add</button></td>' +
       '<td class="c-cv">' + cvSelect(cv) + '</td>' +

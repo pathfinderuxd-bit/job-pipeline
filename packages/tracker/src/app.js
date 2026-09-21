@@ -9,7 +9,7 @@ window.TrackerApp = function(){
 
   var stats = Array.prototype.slice.call(document.querySelectorAll('.tstat'));
   var STATUS_LABEL = {live:'Live', lead:'In progress', wait:'Awaiting', shut:'Closed out'};
-  var filters = {s:'', date:'', via:'', type:'', cv:'', stale:false};
+  var filters = {s:'', date:'', via:'', type:'', cv:'', stale:false, q:''};
   var sortKey = 'applied', sortDir = 'desc';
 
   function uniq(attr){
@@ -1166,8 +1166,70 @@ window.TrackerApp = function(){
     return n;
   }
 
+  /* ---------- search ----------
+   * Every word has to match, anywhere in the row, in any case and ignoring
+   * accents. "Quoted words" match as a phrase. A leading minus excludes.
+   * company: role: via: type: status: note: narrow a word to one column, so
+   * via:wttj finds WTTJ → Workable and -status:closed hides what is finished.
+   * The row's own text is the index — nothing extra to keep in sync. */
+  var FIELDS = { company:'.c-co', co:'.c-co', role:'.c-role', title:'.c-role',
+                 via:'.c-src', source:'.c-src', type:'.c-type',
+                 status:'.c-status', note:'.c-role', notes:'.c-role', date:'.c-date' };
+  function fold(t){
+    return String(t || '').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\u2018\u2019]/g, "'").replace(/\u2192/g, ' ').replace(/\s+/g, ' ');
+  }
+  function parseQuery(q){
+    var out = [], re = /(-)?(?:(\w+):)?(?:"([^"]*)"|(\S+))/g, m;
+    while ((m = re.exec(String(q || '')))){
+      var word = fold(m[3] != null ? m[3] : m[4]).trim();
+      var field = m[2] && FIELDS[m[2].toLowerCase()] ? FIELDS[m[2].toLowerCase()] : null;
+      /* "foo:" that is not a known field is just a word with a colon in it */
+      if (m[2] && !field) word = fold(m[2] + ':' + (m[3] != null ? m[3] : m[4]));
+      if (word) out.push({ not: !!m[1], field: field, word: word });
+    }
+    return out;
+  }
+  var STATUS_WORDS = {live:'live interview screening', lead:'in progress lead', wait:'awaiting', shut:'closed rejected'};
+  function hay(r, sel){
+    if (!sel) return fold(r.textContent + ' ' + (STATUS_WORDS[r.getAttribute('data-s')] || ''));
+    var cell = r.querySelector(sel);
+    var extra = sel === '.c-status' ? ' ' + (STATUS_WORDS[r.getAttribute('data-s')] || '') : '';
+    return fold((cell ? cell.textContent : '') + extra);
+  }
+  function matches(r, terms){
+    for (var i = 0; i < terms.length; i++){
+      var t = terms[i], hit = hay(r, t.field).indexOf(t.word) > -1;
+      if (hit === t.not) return false;
+    }
+    return true;
+  }
+
+  var qIn = document.getElementById('q'), qX = document.getElementById('q-x'), qTimer = null;
+  if (qIn){
+    qIn.addEventListener('input', function(){
+      clearTimeout(qTimer);
+      qTimer = setTimeout(function(){ filters.q = qIn.value; apply(); }, 80);
+    });
+    qIn.addEventListener('keydown', function(e){
+      if (e.key === 'Escape'){ qIn.value = ''; filters.q = ''; apply(); qIn.blur(); }
+    });
+    qX.addEventListener('click', function(){ qIn.value = ''; filters.q = ''; apply(); qIn.focus(); });
+    /* "/" jumps to search from anywhere that is not already a text field. */
+    document.addEventListener('keydown', function(e){
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+      var t = e.target, tag = t && t.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+      if (document.querySelector('dialog[open]')) return;
+      e.preventDefault(); qIn.focus(); qIn.select();
+    });
+  }
+
   function apply(){
     markStale();
+    var terms = parseQuery(filters.q);
+    if (qX) qX.hidden = !filters.q;
     var n = 0;
     rows.forEach(function(r){
       var ok = (!filters.s    || r.getAttribute('data-s')    === filters.s)
@@ -1175,7 +1237,8 @@ window.TrackerApp = function(){
             && (!filters.via  || r.getAttribute('data-via')  === filters.via)
             && (!filters.type || r.getAttribute('data-type') === filters.type)
             && (!filters.cv   || r.getAttribute('data-cv')   === filters.cv)
-            && (!filters.stale || r.getAttribute('data-stale') === '1');
+            && (!filters.stale || r.getAttribute('data-stale') === '1')
+            && (!terms.length || matches(r, terms));
       r.classList.toggle('hide', !ok);
       if (ok) n++;
     });
@@ -1183,8 +1246,11 @@ window.TrackerApp = function(){
       ? (rows.length + ' shown')
       : (n + ' of ' + rows.length + ' shown');
     emptymsg.hidden = n !== 0;
+    emptymsg.textContent = filters.q
+      ? 'Nothing matches \u201c' + filters.q.trim() + '\u201d. Try fewer words, or clear the other filters.'
+      : 'No applications match these filters.';
 
-    var any = filters.s || filters.date || filters.via || filters.type || filters.cv || filters.stale;
+    var any = filters.s || filters.date || filters.via || filters.type || filters.cv || filters.stale || filters.q;
     resetBtn.hidden = !any;
 
     var counts = {live:0, lead:0, wait:0, shut:0};
@@ -1224,7 +1290,8 @@ window.TrackerApp = function(){
 
   resetBtn.addEventListener('click', function(){
     filters.s = ''; filters.date = ''; filters.via = ''; filters.type = ''; filters.cv = '';
-    filters.stale = false;
+    filters.stale = false; filters.q = '';
+    if (qIn) qIn.value = '';
     apply();
   });
 
