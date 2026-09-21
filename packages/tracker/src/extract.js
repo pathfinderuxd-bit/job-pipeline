@@ -99,6 +99,24 @@
       if (pick) return pick.trim();
     }
 
+    /* "Nicola Hinds" <nhinds@zaizi.com> is a recruiter, not the employer.
+     * When the sender's own domain is not a job board or tracker, the display
+     * name has to share something with it to count — otherwise leave it to
+     * the body and the domain. Board and tracker mail keeps the display name,
+     * because there the name is usually the only place the employer appears. */
+    var dom = domainOf(sender);
+    var onBoard = Object.keys(rules.sources).some(function (d) {
+      return dom === d || dom.slice(-(d.length + 1)) === '.' + d;
+    });
+    if (!onBoard && dom) {
+      var parts = dom.split('.').filter(function (x) {
+        return !/^(com|co|uk|org|net|io|ai|app|dev|eu|us|gov|ac|me|biz|info)$/.test(x);
+      });
+      var own = slugish(parts[parts.length - 1] || '');
+      var mine = slugish(name);
+      if (own && mine && mine.indexOf(own) < 0 && own.indexOf(mine) < 0) return '';
+    }
+
     var boards = [];
     Object.keys(rules.sources).forEach(function (d) {
       if (boards.indexOf(rules.sources[d]) < 0) boards.push(rules.sources[d]);
@@ -131,7 +149,9 @@
   function roleFromBody(body) {
     var text = String(body || '');
     var m = text.match(/\b(?:role|position) of\s+([^.\n]{3,80}?)\s+(?:at|with)\b/i) ||
-            text.match(/\bthe\s+([A-Z][^.\n]{3,80}?)\s+(?:position|role)\b/);
+            text.match(/\bthe\s+([A-Z][^.\n]{3,80}?)\s+(?:position|role|job)\b/) ||
+            /* "received your application for Senior Product Designer, and" */
+            text.match(/\bapplication for\s+(?:the\s+)?([A-Z][^.,\n]{2,80}?)(?:\s+(?:job|position|role))?\s*[,.]/);
     return m ? m[1].trim() : '';
   }
 
@@ -289,7 +309,10 @@
       updatedSort: moved ? sortDate(outcomeAt) : 0,
       chip: final.chip,
       note: '',
-      needsReview: !company || !role,
+      /* Flagged only when the employer is missing. A missing role used to set
+       * this too, and the sweep then dropped correctly named applications
+       * under a banner blaming the employer. The subject stands in for a role. */
+      needsReview: !company,
       threadId: first.threadId
     };
   }

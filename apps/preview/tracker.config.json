@@ -13,6 +13,6 @@
     }
   },
   "_baselines": "Sample data only — this build is for showing the flow, not for real rows.",
-  "_dropUnnamed": "Rows whose employer the sweep could not work out are skipped rather than offered. Set false to be shown them with tick boxes.",
-  "dropUnnamed": true
+  "_dropUnnamed": "False: rows whose employer the sweep could not work out are offered, unticked, for you to decide. True skips them silently.",
+  "dropUnnamed": false
 }

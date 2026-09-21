@@ -276,6 +276,38 @@
       "subject": "Rich, your application was sent to Marlowe Group",
       "body": "Your application was sent to Marlowe Group. Delivery Lead. View job. See new jobs that match your profile.",
       "note": "The real LinkedIn confirmation carries digest words in its body. Only the subject is blacklisted, so it survives."
+    },
+    {
+      "want": "ack",
+      "company": "Kestrel Labs",
+      "sender": "noreply@candidates.workablemail.com",
+      "subject": "Thanks for applying to Kestrel Labs",
+      "body": "Kestrel Labs Your application for the Product Designer job was submitted successfully. Here's a copy of your application data for safekeeping. Personal information Name Rich",
+      "note": "Workable's copy-of-application email. No sender name; the employer is only in the subject."
+    },
+    {
+      "want": "ack",
+      "company": "Kestrel Labs",
+      "sender": "noreply@candidates.workablemail.com",
+      "subject": "Product Designer - Kestrel Labs",
+      "body": "Dear Rich, Thank you for your interest in the Product Designer position at Kestrel Labs. We truly appreciate the time and effort you've taken to apply. If you do not hear back from us within two weeks of submitting your application, we will not be able to offer you a role at this time.",
+      "note": "Reads like a rejection in its last line but is an acknowledgement."
+    },
+    {
+      "want": "ack",
+      "company": "Fernhill",
+      "sender": "\"Nicola Hale\" <nhale@fernhill.com>",
+      "subject": "UX/UI Designer (SFIA3/4) - Fernhill",
+      "body": "Hi, Thank you for applying for a job at Fernhill. We appreciate the time and effort you've taken to share your experience. Our recruitment team is currently reviewing applications.",
+      "note": "Sent by a named recruiter from the employer's own domain. The person is not the employer."
+    },
+    {
+      "want": "ack",
+      "company": "Harrow Analytics",
+      "sender": "no-reply@hire.lever.co",
+      "subject": "Thank you for your application to Harrow Analytics",
+      "body": "Hi Rich, Thank you for your interest in Harrow Analytics! We wanted to let you know we received your application for Senior Product Designer, and we are delighted that you would consider joining.",
+      "note": "Lever. The role is only in the body."
     }
   ]
 }

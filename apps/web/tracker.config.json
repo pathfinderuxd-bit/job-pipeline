@@ -13,6 +13,6 @@
     }
   },
   "_baselines": "A hosted page is public: everything here is readable in the page source before anyone signs in. Ship only invented data. Real rows arrive per person, via Import a file or a first Gmail sweep.",
-  "_dropUnnamed": "Rows whose employer the sweep could not work out are skipped rather than offered. Set false to be shown them with tick boxes.",
-  "dropUnnamed": true
+  "_dropUnnamed": "False: rows whose employer the sweep could not work out are offered, unticked, for you to decide. True skips them silently.",
+  "dropUnnamed": false
 }

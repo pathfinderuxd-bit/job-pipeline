@@ -168,7 +168,7 @@
       "part-time"
     ]
   },
-  "_subjectComment": "How to pull company and role out of a subject line. Each entry is a regular expression with named groups; the first one that matches is used.",
+  "_subjectComment": "How to pull company and role out of a subject line. Each entry is a regular expression with named groups; the first one that matches is used. The last pattern is Workable's \"Role - Company\"; its role side may not contain a colon or the word application, or \"Acme: Your Application - Designer\" reads backwards.",
   "subjectPatterns": [
     "^(?:Your )?[Aa]pplication (?:for|to) (?<role>.+?) at (?<company>.+?)$",
     "^(?<company>.+?): (?:Your )?application for (?<role>.+?)$",
@@ -177,7 +177,10 @@
     "^Application received\\s*[:–—-]\\s*(?<role>.+?)(?: at (?<company>.+?))?$",
     "^(?<company>.+?) (?:has )?received your application(?: for (?<role>.+?))?$",
     "^Thank you for your (?:job )?application (?:to|with) (?<company>.+?)$",
-    "^Your [Aa]pplication with (?<company>.+?)\\s+[–—-]\\s+.*$"
+    "^Your [Aa]pplication with (?<company>.+?)\\s+[–—-]\\s+.*$",
+    "^Thanks for applying to (?<company>.+?)!?$",
+    "^Thank you for applying to (?<company>[^,]+?)!?$",
+    "^(?![^-–—]*[Aa]pplication)(?<role>[^-–—:]{3,80}?)\\s+[-–—]\\s+(?<company>[A-Z][\\w&.' ]{1,40})$"
   ],
   "_ignoreComment": "Subjects only. There is deliberately no sender list: LinkedIn sends 'your application was sent to X' and 'Few&Far is hiring' from the same address, and Indeed sends employer decisions from the address its alerts come from. Blocking a sender threw away real mail three times. What an email IS gets decided by reading it — see the gate in extract.js.",
   "ignoreSubjects": [
