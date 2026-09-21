@@ -14,6 +14,10 @@
    * row, whatever else it says. */
   var JOBBISH = /\b(applicat|applying|applied|candidacy|candidate|shortlist|interview|vacancy|\brole\b|\bposition\b|recruit)/i;
 
+  /* Why the last thread was dropped, for the sweep log. */
+  var lastWhy = '';
+  function drop(why) { lastWhy = why; return null; }
+
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -239,7 +243,8 @@
   function threadToApplication(messages, rules) {
     var ordered = (messages || []).slice().sort(function (a, b) { return a.date - b.date; });
     var first = ordered[0];
-    if (!first) return null;
+    lastWhy = '';
+    if (!first) return drop('empty thread');
 
     /* The owner's own lists, weighed rather than ranked. Subject and body both
      * count, the subject three times as much: a list word in the subject is
@@ -253,14 +258,14 @@
     var bs = (listHit(rules.blacklist, first.subject) || isNoise(first, rules)) ? 1 : 0;
     var bb = listHit(rules.blacklist, all) ? 1 : 0;
     var score = 3 * ws + wb - 3 * bs - bb;
-    if (score < 0) return null;
+    if (score < 0) return drop(bs ? 'subject looks like an alert or digest' : 'body reads like an alert or digest');
     var white = !!(ws || wb);
 
     /* Before any of the wording rules get a vote: is this even about a job?
      * "unsuccessful" is the word a rejection uses and also the word a declined
      * card payment uses, and no amount of tuning the rejection phrases fixes
      * that — the thread simply has to be about an application first. */
-    if (!white && !JOBBISH.test(first.subject + '\n' + (first.body || ''))) return null;
+    if (!white && !JOBBISH.test(first.subject + '\n' + (first.body || ''))) return drop('not about a job application');
 
     var source = sourceFor(first.sender, rules);
     var parsed = parseSubject(first.subject, rules);
@@ -290,7 +295,7 @@
     /* A whitelist phrase with no status wording around it still proves an
      * application: count it as awaiting, dated from the first message. */
     if (!outcome && white) { outcome = { status: 'wait', chip: 'Awaiting' }; outcomeAt = first.date; }
-    if (!outcome) return null;
+    if (!outcome) return drop('no acknowledgement or decision wording');
 
     var final = outcome;
     var role = parsed.role;
@@ -345,7 +350,8 @@
     companyFromBody: companyFromBody, companyFromDomain: companyFromDomain,
     statusFor: statusFor, typeFor: typeFor, parseSubject: parseSubject,
     displayDate: displayDate, sortDate: sortDate,
-    threadToApplication: threadToApplication
+    threadToApplication: threadToApplication,
+    why: function () { return lastWhy; }
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = API;

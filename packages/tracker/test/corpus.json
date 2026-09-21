@@ -338,6 +338,13 @@
       "sender": "\"Welcome to the Jungle\" <help@welcometothejungle.com>",
       "subject": "New match: Senior Product Designer at Tallyworks",
       "body": "There are new jobs matching your search preferences, Rich! Tallyworks Senior Product Designer. See all top matches."
+    },
+    {
+      "want": "none",
+      "why": "candidate survey after an application",
+      "sender": "noreply@candidates.workablemail.com",
+      "subject": "Complete our anonymous survey",
+      "body": "Hi Rich, thank you for your application to Fenwick Health. We would love your feedback on the process — it takes two minutes."
     }
   ]
 }

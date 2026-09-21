@@ -144,6 +144,11 @@
           if (named && (to === 'Direct' || String(from).indexOf('\u2192') > -1)) return;
         }
 
+        /* Withdrawing is your decision, not the employer's. A later email —
+         * a scheduling link, a "next steps" chaser sent before you pulled out —
+         * must not quietly reopen it. */
+        if ((f === 'status' || f === 'chip') && /withdr/i.test(String(cur.chip || ''))) return;
+
         /* An acknowledgement must not reopen a decided row. Employers send
          * "thank you for applying" boilerplate inside rejection mail, and a
          * thread read as `wait` should never undo an outcome already on the
@@ -206,7 +211,9 @@
     }
 
     if (opts.change !== false) {
+      var skipChanged = opts.skipChanged || {};
       report.changed.forEach(function (c) {
+        if (skipChanged[c.key]) return;
         if (write(c, c.fields)) applied.changed++;
       });
     }

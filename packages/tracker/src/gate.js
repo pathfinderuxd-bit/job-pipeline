@@ -700,9 +700,21 @@
 
   /* --------------------------------------------------------- the diff view -- */
 
+  /* "Via: was Workable, now WTTJ → Workable" — the arrow inside a source label
+   * cannot also be the arrow meaning "changed to". */
+  var FIELD_NAMES = { chip: 'Status', sourceLabel: 'Via', updated: 'Updated',
+                      applied: 'Applied', note: 'Note', status: 'Status' };
   function fieldLine(f) {
-    var from = (f.from === '' || f.from == null) ? '—' : f.from;
-    return f.field + ': ' + from + ' → ' + f.to;
+    var from = (f.from === '' || f.from == null || f.from === '\u2014') ? 'blank' : f.from;
+    return (FIELD_NAMES[f.field] || f.field) + ': was ' + from + ', now ' + f.to;
+  }
+  /* status and chip say the same thing; show the chip, which is the words. */
+  function visibleFields(fields) {
+    var hasChip = fields.some(function (f) { return f.field === 'chip'; });
+    return fields.filter(function (f) {
+      return f.field !== 'appliedSort' && f.field !== 'updatedSort' &&
+             !(f.field === 'status' && hasChip);
+    });
   }
 
   function showDiff(report, incoming, from) {
@@ -816,16 +828,22 @@
       });
     }
 
+    var skipChanged = {};
     if (report.changed.length) {
-      var chSec = section(report.changed.length + ' updated');
+      var chSec = section(report.changed.length + ' updated',
+        'All ticked. Untick any you do not want — it stays as it is on the page.');
       report.changed.forEach(function (c) {
-        var item = el('div', 'diff-item');
-        item.appendChild(el('span', 'di-co', c.row.company));
-        item.appendChild(el('span', 'di-role', c.row.role));
-        item.appendChild(el('span', 'di-meta', c.fields.filter(function (f) {
-          return f.field !== 'appliedSort' && f.field !== 'updatedSort';
-        }).map(fieldLine).join(' · ')));
-        chSec.appendChild(item);
+        var lab = el('label', 'diff-conflict');
+        var box = document.createElement('input');
+        box.type = 'checkbox'; box.checked = true;
+        box.addEventListener('change', function () { skipChanged[c.key] = !box.checked; });
+        lab.appendChild(box);
+        var txt = el('span', 'dc-text');
+        txt.appendChild(el('span', 'di-co', c.row.company));
+        txt.appendChild(el('span', 'di-role', c.row.role));
+        txt.appendChild(el('span', 'di-meta', visibleFields(c.fields).map(fieldLine).join(' · ')));
+        lab.appendChild(txt);
+        chSec.appendChild(lab);
       });
     }
 
@@ -873,6 +891,74 @@
       });
     }
 
+    /* ---- why isn't something here? ----
+     * Every email this sweep read and what became of it. The answer to "X is
+     * missing" is always one of: no search found the email; it was read and
+     * dropped (and why); or it was matched to a row already on the page. */
+    var log = incoming && incoming.log;
+    if (log && log.length) {
+      var kOf = root.Merge.keyOf;
+      var added = {}, changed = {}, conflicted = {}, skipped = {};
+      report.added.forEach(function (r) { added[kOf(r)] = r.needsReview ? 'unnamed' : 'new'; });
+      report.changed.forEach(function (c) { changed[kOf(c.incoming)] = true; });
+      report.conflicts.forEach(function (c) { conflicted[kOf(c.incoming)] = true; });
+      report.skipped.forEach(function (sk) { skipped[sk.key] = true; });
+      function fate(e) {
+        if (!e.row) return { tone: 'drop', text: 'Dropped: ' + (e.why || 'not an application') };
+        var k = kOf(e.row), who = e.row.company + ' \u00b7 ' + e.row.role;
+        if (added[k] === 'new') return { tone: 'new', text: 'Offered as new: ' + who };
+        if (added[k] === 'unnamed') return { tone: 'new', text: 'Offered, employer unknown' };
+        if (changed[k]) return { tone: 'upd', text: 'Update to ' + who };
+        if (conflicted[k]) return { tone: 'upd', text: 'Needs a decision: ' + who };
+        if (skipped[k]) return { tone: 'drop', text: 'Left out \u2014 you declined it before: ' + who };
+        return { tone: 'same', text: 'Already on the page, nothing new: ' + who };
+      }
+      var kept = log.filter(function (e) { return e.row; }).length;
+      var det = document.createElement('details');
+      det.className = 'diff-log';
+      var sum = document.createElement('summary');
+      sum.textContent = 'Why isn\u2019t something here? \u2014 read ' + log.length +
+                        ' emails: ' + kept + ' looked like applications, ' + (log.length - kept) + ' dropped';
+      det.appendChild(sum);
+      var q = document.createElement('input');
+      q.type = 'search'; q.className = 'log-q'; q.id = 'log-q';
+      q.placeholder = 'Type a company, sender or subject\u2026';
+      q.setAttribute('aria-label', 'Search the emails this sweep read');
+      det.appendChild(q);
+      var list = el('div', 'log-list');
+      det.appendChild(list);
+      function norm(t) { return String(t || '').toLowerCase(); }
+      function draw() {
+        var term = norm(q.value).trim();
+        list.innerHTML = '';
+        if (!term) {
+          list.appendChild(el('p', 'log-hint', 'Search every email this sweep read to see what happened to it.'));
+          return;
+        }
+        var hits = log.filter(function (e) {
+          return norm(e.subject + ' ' + e.from + ' ' + (e.row ? e.row.company + ' ' + e.row.role : '')).indexOf(term) > -1;
+        });
+        if (!hits.length) {
+          list.appendChild(el('p', 'log-hint',
+            'No email mentioning \u201c' + q.value.trim() + '\u201d was read in this sweep \u2014 ' +
+            'none of the searches found it. Star it in Gmail and refresh, and it will be.'));
+          return;
+        }
+        hits.sort(function (a, b) { return b.date - a.date; }).slice(0, 40).forEach(function (e) {
+          var f = fate(e), item = el('div', 'log-item');
+          item.appendChild(el('span', 'log-subj', e.subject || '(no subject)'));
+          item.appendChild(el('span', 'log-from',
+            (e.date ? new Date(e.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' \u00b7 ' : '') +
+            String(e.from).replace(/\s*<[^>]+>/, '')));
+          item.appendChild(el('span', 'log-fate log-' + f.tone, f.text));
+          list.appendChild(item);
+        });
+      }
+      q.addEventListener('input', draw);
+      draw();
+      body.appendChild(det);
+    }
+
     var applyBtn = document.getElementById('diff-apply');
     applyBtn.disabled = !report.added.length && !report.changed.length &&
                         !report.conflicts.length && !report.skipped.length;
@@ -890,7 +976,7 @@
       });
 
       var merged = root.Merge.apply(currentRows(), report,
-        { conflicts: picks, skipAdded: skipAdded });
+        { conflicts: picks, skipAdded: skipAdded, skipChanged: skipChanged });
 
       /* Anything taken back has to be put in by hand, since the diff had set it
        * aside before the person changed their mind. */
@@ -927,7 +1013,7 @@
         var k = root.Merge.keyOf(r);
         if (!skipAdded[k]) note(k, 'New');
       });
-      report.changed.forEach(function (c) { note(c.key, chipOf(c.fields)); });
+      report.changed.forEach(function (c) { if (!skipChanged[c.key]) note(c.key, chipOf(c.fields)); });
       report.conflicts.forEach(function (c) {
         var picked = c.fields.filter(function (f) { return picks[c.key + '::' + f.field]; });
         if (picked.length) note(c.key, chipOf(picked));

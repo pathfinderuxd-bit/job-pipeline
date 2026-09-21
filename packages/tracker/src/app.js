@@ -1214,6 +1214,8 @@ window.TrackerApp = function(){
     });
     qIn.addEventListener('keydown', function(e){
       if (e.key === 'Escape'){ qIn.value = ''; filters.q = ''; apply(); qIn.blur(); }
+      /* "/" is the jump-to-search key, so it never lands as the first character. */
+      if (e.key === '/' && !qIn.value) e.preventDefault();
     });
     qX.addEventListener('click', function(){ qIn.value = ''; filters.q = ''; apply(); qIn.focus(); });
     /* "/" jumps to search from anywhere that is not already a text field. */

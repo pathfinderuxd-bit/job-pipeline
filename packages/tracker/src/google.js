@@ -327,6 +327,7 @@
 
     var seen = {};
     var rows = [];
+    var log = [];
     var done = 0, expected = 0;
 
     function tell(stage) {
@@ -345,6 +346,12 @@
         return getThread(id).then(function (messages) {
           var row = withBoard(window.Extract.threadToApplication(messages, rules), messages);
           if (row) rows.push(row);
+          /* Every thread read, and what became of it — the only way to answer
+           * "why isn't X here?" without guessing. Kept in memory, never saved. */
+          var first = messages[0] || {};
+          log.push({ subject: first.subject || '', from: first.sender || '',
+                     date: first.date ? first.date.getTime() : 0, stage: stage,
+                     row: row || null, why: row ? '' : window.Extract.why() });
         }, function () { /* one unreadable thread must not sink the sweep */ })
           .then(function () { done++; tell(stage); return worker(); });
       }
@@ -401,6 +408,7 @@
       return gather(qs, 'checking for replies');
     }).then(function () {
       rows.sort(function (a, b) { return (b.appliedSort || 0) - (a.appliedSort || 0); });
+      rows.log = log;
       return rows;
     });
   }
@@ -589,6 +597,17 @@
           updated: '15 Sep', updatedSort: 20260915
         });
       }
+      /* A sweep log shaped like the real one, so the "why isn't something
+       * here?" panel can be exercised without a mailbox. */
+      found.log = found.map(function (r) {
+        return { subject: 'Your application to ' + r.company, from: r.company + ' <jobs@example.com>',
+                 date: Date.now(), stage: 'finding applications', row: r, why: '' };
+      }).concat([
+        { subject: 'New match: Product Designer at Tallyworks', from: 'Welcome to the Jungle <help@example.com>',
+          date: Date.now(), stage: 'finding applications', row: null, why: 'subject looks like an alert or digest' },
+        { subject: 'Your weekly summary', from: 'Newsletter <news@example.com>',
+          date: Date.now(), stage: 'finding applications', row: null, why: 'not about a job application' }
+      ]);
       if (o.onProgress) { o.onProgress(0, found.length); o.onProgress(found.length, found.length); }
       return new Promise(function (res) { setTimeout(function () { res(found); }, 200); });
     };

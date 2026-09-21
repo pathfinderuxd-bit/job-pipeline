@@ -235,7 +235,10 @@
     "you appeared",
     "your job alert",
     "your job search",
-    "your weekly"
+    "your weekly",
+    "survey",
+    "feedback form",
+    "rate your experience"
   ],
   "_gateComment": "A thread only becomes a row if one of the status patterns above matches somewhere in it. No acknowledgement, no rejection, no interview wording means it is not an application — a job alert, a profile notification, a newsletter. Widening the 'wait' patterns is what to do if a real application is being missed.",
   "_labelComment": "No label is used to find mail — the sweep reads the wording, the job boards and trackers in `sources`, and is:starred. One label is used to *exclude* mail: whatever is in excludeLabels, but only if that label actually exists in the mailbox; otherwise the sweep goes straight to the keywords. Gmail label search wants the full path (JOBS/LinkedIn), with spaces as dashes.",
