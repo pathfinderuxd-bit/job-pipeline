@@ -255,31 +255,40 @@
     since.setMonth(since.getMonth() - months);
     var after = since.getFullYear() + '/' + (since.getMonth() + 1) + '/' + since.getDate();
 
-    /* One label you control is the only exclusion that does any real work.
-     * Gmail puts its own Jobs / LinkedIn / Indeed labels on the digest and on
-     * the recruiter's reply alike, so those cannot tell noise from signal —
-     * but a label you sweep the digests into yourself can. Set noiseLabel in
-     * rules.json to whatever you called it. */
-    var not = rules.noiseLabel ? ' -label:' + rules.noiseLabel.replace(/\s+/g, '-') : '';
-    var base = 'after:' + after + ' in:anywhere' + not + ' ';
+    /* One label excludes, and only if it exists. A query naming a label the
+     * mailbox does not have is at best ignored and at worst matches nothing,
+     * so ask Gmail which labels are there first and drop any that are not.
+     * No label is used to *find* mail any more: filtering in by label cost
+     * more real mail than it caught. */
+    var base, queries;
+    function prepare() {
+      var wanted = (rules.excludeLabels || []).map(function (l) { return String(l).trim(); })
+                                              .filter(Boolean);
+      var check = wanted.length
+        ? api('https://gmail.googleapis.com/gmail/v1/users/me/labels').then(function (d) {
+            var have = {};
+            (d.labels || []).forEach(function (l) { have[String(l.name).toLowerCase()] = true; });
+            return wanted.filter(function (l) { return have[l.toLowerCase()]; });
+          }, function () { return []; })
+        : Promise.resolve([]);
+      return check.then(function (present) {
+        var not = present.map(function (l) {
+          return ' -label:"' + l.replace(/"/g, '').replace(/\s+/g, '-') + '"';
+        }).join('');
+        base = 'after:' + after + ' in:anywhere' + not + ' ';
 
-    /* Pass one: find applications. Four nets, because no single one is
-     * trustworthy — the wording of the mail, the job boards and applicant
-     * trackers it comes from, the labels you file it under, and the star you
-     * put on it. Anything they drag in that is not an application is thrown
-     * out by the gate in extract.js, which has read the thread; a subject line
-     * and a label have not. */
-    var queries = [base + '(subject:application OR subject:applying ' +
-                   'OR subject:applied OR subject:"thank you for your interest")'];
-    Object.keys(rules.sources).forEach(function (d) {
-      queries.push(base + 'from:' + d);
-    });
-    (rules.labels || []).forEach(function (label) {
-      /* The full path, and Gmail wants spaces as dashes. A nested label is
-       * JOBS/LinkedIn — querying the parent does not include its children. */
-      queries.push(base + 'label:' + String(label).replace(/\s+/g, '-'));
-    });
-    queries.push(base + 'is:starred');
+        /* Pass one: find applications — the wording, the boards and trackers
+         * they come from, and your star. The gate in extract.js has the final
+         * say, having read the thread. */
+        queries = [base + '(subject:application OR subject:applying ' +
+                   'OR subject:applied OR subject:"thank you for your interest" ' +
+                   'OR subject:interview OR "thanks for applying" OR "on this occasion")'];
+        Object.keys(rules.sources).forEach(function (d) {
+          queries.push(base + 'from:' + d);
+        });
+        queries.push(base + 'is:starred');
+      });
+    }
 
     /* Job words, for narrowing pass two. Plenty of agencies are named after
      * ordinary nouns, and without these an employer whose name is a common
@@ -326,7 +335,9 @@
       }, Promise.resolve()).then(function () { return readAll(found, stage); });
     }
 
-    return gather(queries, 'finding applications').then(function () {
+    return prepare().then(function () {
+      return gather(queries, 'finding applications');
+    }).then(function () {
       /* Pass two: chase the follow-ups. Pass one finds the acknowledgement
        * because it is worded like one and filed like one; the rejection that
        * comes six weeks later is often neither — no label, no star, a subject
@@ -334,11 +345,11 @@
        * so we can go and ask for it directly. This is the pass that catches
        * "we have decided not to proceed" and "invite you to interview".
        *
-       * Only roles still open are worth chasing — a decided row has nothing
-       * left to hear. */
+       * Every row on the page is chased, closed ones included — an employer
+       * does sometimes come back. */
       var want = {};
       function consider(r) {
-        if (!r || r.status === 'shut') return;
+        if (!r) return;
         var name = String(r.company || '').trim();
         if (!name || name.charAt(0) === '(' || name.length < 3) return;
         want[name.toLowerCase()] = name;

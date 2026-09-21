@@ -163,7 +163,7 @@
         var n = 0;
         old.forEach(function (o) { n += store.importLegacy(o.key); });
         toast({ text: n + ' edits restored', tone: 'good' });
-        if (root.TrackerApp && root.TrackerApp.reload) root.TrackerApp.reload(store.applications());
+        if (root.TrackerApp && root.TrackerApp.reload) { root.TrackerApp.reload(store.applications()); paintDots(); }
       }}
     });
   }
@@ -209,7 +209,7 @@
         if (store.isEmpty() || !(store.applications() || []).length) {
           store.setApplications(parsed.applications, parsed.baseline);
           if (fromGate) start();
-          else root.TrackerApp.reload(store.applications());
+          else { root.TrackerApp.reload(store.applications()); paintDots(); }
           toast({ text: 'Imported ' + parsed.applications.length + ' applications', tone: 'good' });
           return;
         }
@@ -415,12 +415,167 @@
     root.Render.all(rows, SITE);
     root.TrackerApp();
     buildToolbar();
+    drawBell();
+    paintDots();
 
     /* A last write before the tab goes, so a closed laptop does not lose the
      * couple of seconds since the last save. */
     window.addEventListener('pagehide', function () { store.flush(); });
     document.addEventListener('visibilitychange', function () {
       if (document.visibilityState === 'hidden') store.flush();
+    });
+  }
+
+  /* --------------------------------------------------------------- alerts --
+   * What the last refreshes changed, so it can be found again. Kept in the doc
+   * (so Drive carries it between machines), newest first, capped. Unseen ones
+   * put a red dot on their row and count on the bell; opening the row — from
+   * the bell or from its own ⋯ — marks it seen.
+   */
+  var BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/>' +
+    '<path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 ' +
+    '4.499-1.411 5.956-2.738 7.326"/></svg>';
+  var GO = '<svg class="bi-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+
+  function alerts() { return (store.doc && store.doc.alerts) || []; }
+  function unseen() { return alerts().filter(function (a) { return !a.seen; }); }
+
+  function recordAlerts(fresh) {
+    if (!fresh.length || !store.doc) return;
+    var keep = {}, out = [];
+    fresh.concat(alerts()).forEach(function (a) {
+      if (keep[a.key]) return;            // newest per row wins
+      keep[a.key] = true; out.push(a);
+    });
+    store.doc.alerts = out.slice(0, 60);
+  }
+
+  function markSeen(test) {
+    var hit = false;
+    alerts().forEach(function (a) { if (!a.seen && test(a)) { a.seen = true; hit = true; } });
+    if (hit) { store.touch(); drawBell(); paintDots(); }
+  }
+
+  function rowFor(a) {
+    var tb = document.getElementById('tb');
+    if (!tb) return null;
+    var tr = a.id ? tb.querySelector('tr[data-id="' + String(a.id).replace(/"/g, '') + '"]') : null;
+    return tr;
+  }
+
+  function paintDots() {
+    var tb = document.getElementById('tb');
+    if (!tb) return;
+    Array.prototype.forEach.call(tb.querySelectorAll('tr[data-alert]'), function (tr) {
+      tr.removeAttribute('data-alert');
+    });
+    unseen().forEach(function (a) {
+      var tr = rowFor(a);
+      if (tr) tr.setAttribute('data-alert', '1');
+    });
+  }
+
+  function openAlert(a) {
+    var tr = rowFor(a);
+    markSeen(function (x) { return x.key === a.key; });
+    if (!tr) { toast({ text: a.company + ' is not on the page any more.', tone: 'warn' }); return; }
+    tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    var more = tr.querySelector('.rowbtn');
+    if (more) more.click();              // exactly what the row's own ⋯ does
+  }
+
+  function drawBell() {
+    var chrome = document.querySelector('#pagechrome .chrome-actions');
+    if (!chrome) return;
+    var wrap = document.getElementById('bell');
+    if (!wrap) {
+      wrap = el('div', 'bell-wrap'); wrap.id = 'bell';
+      var btn = el('button', 'themebtn bellbtn');
+      btn.type = 'button'; btn.id = 'bell-btn';
+      btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-expanded', 'false');
+      btn.innerHTML = BELL + '<span class="bell-n" id="bell-n" hidden></span>';
+      var menu = el('div', 'bell-menu'); menu.id = 'bell-menu'; menu.hidden = true;
+      wrap.appendChild(btn); wrap.appendChild(menu);
+      /* Before the account avatar, so the avatar stays the last thing on the row. */
+      var who = chrome.querySelector('.acct-who');
+      chrome.insertBefore(wrap, who || null);
+
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        menu.hidden = !menu.hidden;
+        btn.setAttribute('aria-expanded', String(!menu.hidden));
+        /* On a phone the bell is not the last thing on the row — the avatar
+         * is — so a menu hung from it runs off the left edge. Pin it to the
+         * screen instead, just under the button. */
+        if (!menu.hidden && window.innerWidth < 700) {
+          var r = btn.getBoundingClientRect();
+          menu.style.position = 'fixed';
+          menu.style.top = Math.round(r.bottom + 8) + 'px';
+          menu.style.left = '12px'; menu.style.right = '12px'; menu.style.width = 'auto';
+        } else {
+          menu.style.position = menu.style.top = menu.style.left = menu.style.right = menu.style.width = '';
+        }
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.hidden && !wrap.contains(e.target)) {
+          menu.hidden = true; btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
+      });
+      /* Opening a row the ordinary way clears its dot too. */
+      var tb = document.getElementById('tb');
+      if (tb) tb.addEventListener('click', function (e) {
+        var more = e.target.closest('.rowbtn');
+        if (!more) return;
+        var id = more.closest('tr') && more.closest('tr').getAttribute('data-id');
+        if (id) markSeen(function (a) { return a.id === id; });
+      }, true);
+    }
+
+    var n = unseen().length;
+    var badge = document.getElementById('bell-n');
+    badge.hidden = !n;
+    badge.textContent = n > 9 ? '9+' : String(n);
+    document.getElementById('bell-btn').setAttribute('aria-label',
+      n ? n + ' update' + (n === 1 ? '' : 's') + ' from Gmail' : 'Updates from Gmail');
+
+    var menu = document.getElementById('bell-menu');
+    menu.innerHTML = '';
+    var head = el('div', 'bell-head');
+    head.appendChild(el('span', '', 'Updates from Gmail'));
+    if (n) {
+      var clear = el('button', 'bell-clear', 'Mark all read');
+      clear.type = 'button';
+      clear.onclick = function (e) { e.stopPropagation(); markSeen(function () { return true; }); };
+      head.appendChild(clear);
+    }
+    menu.appendChild(head);
+
+    var list = alerts();
+    if (!list.length) {
+      menu.appendChild(el('div', 'bell-empty', 'Nothing yet. Refresh from Gmail and anything it changes shows up here.'));
+      return;
+    }
+    list.forEach(function (a) {
+      var item = el('button', 'bell-item' + (a.seen ? ' seen' : ''));
+      item.type = 'button';
+      item.appendChild(el('span', 'bi-dot'));
+      var txt = el('span', 'bi-text');
+      txt.appendChild(el('b', '', a.company || '—'));
+      txt.appendChild(el('span', '', a.role || ''));
+      item.appendChild(txt);
+      item.appendChild(el('span', 'bi-what', a.what));
+      item.insertAdjacentHTML('beforeend', GO);
+      item.onclick = function (e) {
+        e.stopPropagation();
+        menu.hidden = true; document.getElementById('bell-btn').setAttribute('aria-expanded', 'false');
+        openAlert(a);
+      };
+      menu.appendChild(item);
     });
   }
 
@@ -751,6 +906,34 @@
         Object.keys(r).forEach(function (k) { if (k !== 'manual') copy[k] = r[k]; });
         return copy;
       }));
+
+      /* What this refresh actually changed, for the bell and the row dots.
+       * The row's id is taken from the merged list, not the report: applying
+       * can correct `applied`, and the id is built from it. */
+      var byKey = {};
+      merged.rows.forEach(function (r) { byKey[root.Merge.keyOf(r)] = r; });
+      var stamp = new Date().toISOString(), fresh = [];
+      function note(key, what) {
+        var r = byKey[key];
+        if (!r) return;
+        fresh.push({ key: key, id: root.Render.idOf(r), company: r.company, role: r.role,
+                     what: what, at: stamp, seen: false });
+      }
+      function chipOf(fields) {
+        var c = fields.filter(function (f) { return f.field === 'chip'; })[0];
+        return c ? String(c.to) : 'Updated';
+      }
+      report.added.forEach(function (r) {
+        var k = root.Merge.keyOf(r);
+        if (!skipAdded[k]) note(k, 'New');
+      });
+      report.changed.forEach(function (c) { note(c.key, chipOf(c.fields)); });
+      report.conflicts.forEach(function (c) {
+        var picked = c.fields.filter(function (f) { return picks[c.key + '::' + f.field]; });
+        if (picked.length) note(c.key, chipOf(picked));
+      });
+      if (back) report.skipped.forEach(function (sk) { if (restore[sk.key]) note(sk.key, 'New'); });
+      recordAlerts(fresh);
       dlg.close();
       var said = ['Added ' + merged.applied.added,
                   'updated ' + (merged.applied.changed + merged.applied.conflicts)];
@@ -758,6 +941,8 @@
       if (back) said.push(back + ' taken back');
       toast({ text: said.join(', '), tone: 'good' });
       root.TrackerApp.reload(store.applications());
+      drawBell();
+      paintDots();
       /* The masthead's timestamp is about the rows, so applying a refresh has
        * to move it — reload() only redraws the table. */
       if (store.doc && store.doc.updatedAt) {

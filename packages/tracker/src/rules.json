@@ -174,12 +174,12 @@
     "^(?<company>.+?): (?:Your )?application for (?<role>.+?)$",
     "^Thank you for applying to (?<role>.+?) at (?<company>.+?)$",
     "^(?:Update on your|Your) application (?:for|to) (?<role>.+?)(?: at (?<company>.+?))?$",
-    "^Application received\\s*[:\u2013\u2014-]\\s*(?<role>.+?)(?: at (?<company>.+?))?$",
+    "^Application received\\s*[:–—-]\\s*(?<role>.+?)(?: at (?<company>.+?))?$",
     "^(?<company>.+?) (?:has )?received your application(?: for (?<role>.+?))?$",
     "^Thank you for your (?:job )?application (?:to|with) (?<company>.+?)$",
-    "^Your [Aa]pplication with (?<company>.+?)\\s+[\u2013\u2014-]\\s+.*$"
+    "^Your [Aa]pplication with (?<company>.+?)\\s+[–—-]\\s+.*$"
   ],
-  "_ignoreComment": "Subjects only. There is deliberately no sender list: LinkedIn sends 'your application was sent to X' and 'Few&Far is hiring' from the same address, and Indeed sends employer decisions from the address its alerts come from. Blocking a sender threw away real mail three times. What an email IS gets decided by reading it \u2014 see the gate in extract.js.",
+  "_ignoreComment": "Subjects only. There is deliberately no sender list: LinkedIn sends 'your application was sent to X' and 'Few&Far is hiring' from the same address, and Indeed sends employer decisions from the address its alerts come from. Blocking a sender threw away real mail three times. What an email IS gets decided by reading it — see the gate in extract.js.",
   "ignoreSubjects": [
     "appeared in",
     "are hiring",
@@ -233,14 +233,36 @@
     "your job search",
     "your weekly"
   ],
-  "_gateComment": "A thread only becomes a row if one of the status patterns above matches somewhere in it. No acknowledgement, no rejection, no interview wording means it is not an application \u2014 a job alert, a profile notification, a newsletter. Widening the 'wait' patterns is what to do if a real application is being missed.",
-  "labels": [
-    "JOBS",
-    "JOBS/LinkedIn",
-    "JOBS/Indeed",
-    "JOBS/CW Jobs"
+  "_gateComment": "A thread only becomes a row if one of the status patterns above matches somewhere in it. No acknowledgement, no rejection, no interview wording means it is not an application — a job alert, a profile notification, a newsletter. Widening the 'wait' patterns is what to do if a real application is being missed.",
+  "_labelComment": "No label is used to find mail — the sweep reads the wording, the job boards and trackers in `sources`, and is:starred. One label is used to *exclude* mail: whatever is in excludeLabels, but only if that label actually exists in the mailbox; otherwise the sweep goes straight to the keywords. Gmail label search wants the full path (JOBS/LinkedIn), with spaces as dashes.",
+  "excludeLabels": [
+    "Job Alerts"
   ],
-  "noiseLabel": "",
-  "_labelComment": "Gmail label search takes the full path: a nested label is JOBS/LinkedIn, not LinkedIn, and querying the parent does NOT include its children. 'label:LinkedIn' and 'label:Indeed' matched nothing at all.",
-  "_noiseComment": "Optional. A label you sweep digests into yourself, excluded from every query. Empty because no such label exists on the account yet."
+  "_keywordComment": "Case-insensitive. Precedence: a whitelist phrase in the SUBJECT keeps a thread whatever else it says; otherwise a blacklist word (or ignoreSubjects) in the subject drops it; otherwise a whitelist phrase in the body keeps it. A whitelist hit with no status wording reads as Awaiting; the status rules still decide Rejected, Interview and the rest.",
+  "blacklist": [
+    "alert",
+    "new jobs",
+    "match",
+    "view job",
+    "bad match",
+    "job alert",
+    "new job",
+    "matches",
+    "see new",
+    "see new jobs"
+  ],
+  "whitelist": [
+    "thanks for applying",
+    "your application",
+    "taken to apply",
+    "taken the time to apply",
+    "thank you for applying",
+    "received your application",
+    "review your application",
+    "reviewed your application",
+    "on this occasion",
+    "interview",
+    "talent interview",
+    "an interview"
+  ]
 }

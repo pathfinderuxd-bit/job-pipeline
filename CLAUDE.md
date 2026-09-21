@@ -90,13 +90,28 @@ static page has no OCR — and that limit is deliberate, not a to-do.
 
 ## The Gmail sweep
 
-Two passes. The first finds applications, from four nets that are each
-unreliable alone: the wording, the boards and applicant trackers in `sources`,
-the labels in `labels`, and `is:starred`. The second takes every employer with a
-role still open and queries Gmail for their mail directly, narrowed by job
-words. A rejection or an interview invitation usually arrives as its own thread,
-weeks later, with no label and a subject that never says "application" — pass
-one cannot see it and pass two can.
+Two passes. The first finds applications from the wording, the boards and
+applicant trackers in `sources`, and `is:starred`. **No label is used to find
+mail** — filtering in by label cost more real mail than it caught. The second
+pass takes every employer on the page, closed ones included, and queries Gmail
+for their mail directly, narrowed by job words, eight employers to a query.
+
+One label *excludes*: `excludeLabels` in rules.json (currently `Job Alerts`),
+and only if that label exists in the mailbox — the sweep asks Gmail for the
+label list first and drops any that are not there.
+
+The owner's `whitelist` and `blacklist` are case-insensitive, with this
+precedence: a whitelist phrase in the **subject** keeps a thread whatever else
+it says; otherwise a blacklist word (or `ignoreSubjects`) in the subject drops
+it; otherwise a whitelist phrase in the **body** keeps it. Letting a body hit
+beat a blacklisted subject let digests through — alert small print says "make
+your application stand out". A whitelist hit with no status wording reads as
+Awaiting; the status rules still decide Rejected, Interview and the rest.
+
+What an applied refresh changes goes into `doc.alerts` (newest per row, capped
+at 60). Unseen alerts put a red dot on the row and a count on the bell; the
+bell's list opens a row exactly as its ⋯ does, and opening a row either way
+marks it seen.
 
 Cast wide, then let `extract.js` decide. It has read the thread; a Gmail query
 has only read a subject line.

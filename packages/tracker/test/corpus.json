@@ -239,6 +239,43 @@
       "subject": "Thanks for your interest in joining Calder IT!",
       "body": "Hi Rich, Thank you for your application to Calder IT. We appreciate you taking the time to apply for the Senior Product Designer role. However, in this instance, we won’t be moving forward with your application.",
       "note": "The display name is half recruiter, half employer. Taken whole it puts a person in the company column, matches no existing row, and lands as a duplicate."
+    },
+    {
+      "want": "none",
+      "why": "digest whose body says interview",
+      "sender": "jobs-noreply@linkedin.com",
+      "subject": "8 new jobs for you in London",
+      "body": "Top job picks for you. Get interview-ready with Premium. View job. See new jobs."
+    },
+    {
+      "want": "none",
+      "why": "alert whose body says your application",
+      "sender": "alert@indeed.com",
+      "subject": "Your job alert: Product Designer",
+      "body": "12 new matches. Make your application stand out with an updated CV. View job."
+    },
+    {
+      "want": "none",
+      "why": "match nag whose body mentions an application",
+      "sender": "notifications@example-board.com",
+      "subject": "Bad match? Tell us what you are looking for",
+      "body": "Based on your application history we picked these roles for you."
+    },
+    {
+      "want": "ack",
+      "company": "Thornby Media",
+      "sender": "c0714546@pinpoint.email",
+      "subject": "Application Received - UX/UI Designer -FTC – 4 months",
+      "body": "Hi Rich, Thank you for your interest in joining Thornby Media. We aim to provide feedback on your application within a maximum of 15 days. If you do not hear from us within this timeframe, it means that your application has not been successful on this occasion.",
+      "note": "An acknowledgement that mentions 'on this occasion' conditionally. Must not read as a rejection."
+    },
+    {
+      "want": "ack",
+      "company": "Marlowe Group",
+      "sender": "jobs-noreply@linkedin.com",
+      "subject": "Rich, your application was sent to Marlowe Group",
+      "body": "Your application was sent to Marlowe Group. Delivery Lead. View job. See new jobs that match your profile.",
+      "note": "The real LinkedIn confirmation carries digest words in its body. Only the subject is blacklisted, so it survives."
     }
   ]
 }

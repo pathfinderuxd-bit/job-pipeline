@@ -1398,3 +1398,60 @@ dialog.cvl{max-height:min(86vh,900px)}
   .splash{transition:none}
   .splash-pin{animation:none}
 }
+
+/* ------------------------------------------------------------ the bell --
+ * Updates found by a refresh. The dot colour is the one alarm red in the app,
+ * used here and on the row, so the two read as the same thing.
+ */
+.bell-wrap{position:relative;display:inline-flex}
+.bellbtn{position:relative;padding:0;width:34px;height:34px;justify-content:center;gap:0}
+.bellbtn svg{width:16px;height:16px}
+.bell-n{
+  position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;
+  border-radius:999px;background:#E5484D;color:#fff;
+  font-size:10.5px;font-weight:700;line-height:18px;text-align:center;
+  box-shadow:0 0 0 2px var(--ground);font-variant-numeric:tabular-nums;
+}
+.bell-n[hidden]{display:none}
+.bell-menu{
+  position:absolute;top:calc(100% + 6px);right:0;z-index:60;
+  width:min(360px,calc(100vw - 24px));max-height:min(70vh,460px);overflow:auto;
+  background:var(--surface);border:1px solid var(--line-strong);
+  border-radius:var(--r-md,8px);box-shadow:var(--sh-lg,0 10px 26px rgba(0,0,0,.4));
+  padding:5px;
+}
+.bell-menu[hidden]{display:none}
+.bell-head{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:8px 10px 9px;margin-bottom:4px;border-bottom:1px solid var(--line);
+  font-size:var(--t-xs,12px);color:var(--ink-3);
+}
+.bell-clear{
+  background:none;border:0;font:inherit;font-size:var(--t-xs,12px);color:var(--ink-2);
+  cursor:pointer;padding:2px 6px;border-radius:var(--r-sm,6px);
+}
+.bell-clear:hover{color:var(--ink);background:var(--surface-2)}
+.bell-item{
+  display:grid;grid-template-columns:8px minmax(0,1fr) auto 16px;align-items:center;gap:10px;
+  width:100%;text-align:left;background:none;border:0;border-radius:var(--r-sm,6px);
+  padding:9px 8px 9px 10px;cursor:pointer;font-family:inherit;color:var(--ink);
+}
+.bell-item:hover,.bell-item:focus-visible{background:var(--surface-2)}
+.bi-dot{width:8px;height:8px;border-radius:50%;background:#E5484D}
+.bell-item.seen .bi-dot{background:transparent}
+.bi-text{min-width:0;display:flex;flex-direction:column;gap:1px}
+.bi-text b{font-size:var(--t-meta,13px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bi-text span{font-size:var(--t-xs,12px);color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bell-item.seen .bi-text b{font-weight:500;color:var(--ink-2)}
+.bi-what{
+  font-size:11px;font-weight:600;white-space:nowrap;
+  padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);
+}
+.bi-go{width:16px;height:16px;color:var(--ink-3)}
+.bell-empty{padding:14px 10px;font-size:var(--t-meta,13px);color:var(--ink-3);line-height:1.45}
+
+/* The row the bell is pointing at. */
+#tb tr[data-alert="1"] .c-co .cellf::before{
+  content:"";flex:none;width:8px;height:8px;border-radius:50%;
+  background:#E5484D;box-shadow:0 0 0 2px var(--surface);
+}

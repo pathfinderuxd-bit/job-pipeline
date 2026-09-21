@@ -42,6 +42,17 @@
     return (rules.ignoreSubjects || []).some(function (s) { return subject.indexOf(s) > -1; });
   }
 
+  /* Case-insensitive, typographic quotes flattened — the same treatment the
+   * status rules get, so a list entry behaves the same wherever it lives. */
+  function flat(text) {
+    return String(text || '').toLowerCase()
+      .replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u201C\u201D]/g, '"');
+  }
+  function listHit(list, text) {
+    var hay = flat(text);
+    return (list || []).some(function (w) { return w && hay.indexOf(flat(w)) > -1; });
+  }
+
   function statusFor(text, rules) {
     /* Employers write "won't be moving forward" with a typographic
      * apostrophe. Matched against a straight-quoted rule that is simply a
@@ -187,13 +198,26 @@
   function threadToApplication(messages, rules) {
     var ordered = (messages || []).slice().sort(function (a, b) { return a.date - b.date; });
     var first = ordered[0];
-    if (!first || isNoise(first, rules)) return null;
+    if (!first) return null;
+
+    /* The owner's own lists, in this order of precedence:
+     *   1. a whitelist phrase in the subject keeps the thread, whatever else;
+     *   2. a blacklist word in the subject drops it — those are the digests;
+     *   3. a whitelist phrase in the body keeps what is left.
+     * Letting a body hit beat a blacklisted subject let digests through: an
+     * alert's small print says "make your application stand out", a match
+     * nag says "based on your application history". The corpus has both. */
+    var all = ordered.map(function (m) { return m.subject + '\n' + (m.body || ''); }).join('\n');
+    var subjWhite = listHit(rules.whitelist, first.subject);
+    var black = listHit(rules.blacklist, first.subject) || isNoise(first, rules);
+    if (black && !subjWhite) return null;
+    var white = subjWhite || listHit(rules.whitelist, all);
 
     /* Before any of the wording rules get a vote: is this even about a job?
      * "unsuccessful" is the word a rejection uses and also the word a declined
      * card payment uses, and no amount of tuning the rejection phrases fixes
      * that — the thread simply has to be about an application first. */
-    if (!JOBBISH.test(first.subject + '\n' + (first.body || ''))) return null;
+    if (!white && !JOBBISH.test(first.subject + '\n' + (first.body || ''))) return null;
 
     var source = sourceFor(first.sender, rules);
     var parsed = parseSubject(first.subject, rules);
@@ -220,6 +244,9 @@
      * interview invitation. Without that it is a job alert, a "you appeared in
      * 4 searches", a newsletter; previously every one of those became an
      * Awaiting row with no employer against it. */
+    /* A whitelist phrase with no status wording around it still proves an
+     * application: count it as awaiting, dated from the first message. */
+    if (!outcome && white) { outcome = { status: 'wait', chip: 'Awaiting' }; outcomeAt = first.date; }
     if (!outcome) return null;
 
     var final = outcome;
