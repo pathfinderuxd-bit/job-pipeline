@@ -1519,3 +1519,20 @@ dialog.cvl{max-height:min(86vh,900px)}
 .log-upd{color:var(--lead,#4C7FD9)}
 .log-same{color:var(--ink-2)}
 .log-drop{color:#E5484D}
+
+/* ---- v1.9.2 — Refresh joins the masthead row --------------------------
+ * Desktop: "Refresh from Gmail". Tablet and larger phones: "Refresh".
+ * Smallest phones: the Gmail mark alone, in a square the height of its
+ * neighbours. */
+.chrome-actions #refreshbtn{order:-2;white-space:nowrap}
+@media (max-width:1024px){
+  .chrome-actions #refreshbtn .rb-long{display:none}
+}
+@media (max-width:700px){
+  .chrome-actions #refreshbtn{min-height:36px;height:36px}
+}
+@media (max-width:480px){
+  .chrome-actions #refreshbtn{width:36px;padding:0;justify-content:center;gap:0}
+  .chrome-actions #refreshbtn .rb-label{display:none}
+  .chrome-actions #refreshbtn .acct-ic{width:18px;height:18px}
+}

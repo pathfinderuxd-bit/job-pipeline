@@ -385,8 +385,13 @@
     if (chrome) chrome.appendChild(who);
     else bar.appendChild(who);
 
-    var actions = el('span', 'acct-actions');
-    bar.appendChild(actions);
+    /* Refresh sits at the head of the masthead row, left of the theme button,
+     * so the header is one line on a desktop instead of two. */
+    var stale = document.getElementById('refreshbtn');
+    if (stale) stale.remove();
+    var actions = chrome || el('span', 'acct-actions');
+    if (!chrome) bar.appendChild(actions);
+    else bar.hidden = true;
 
     var refreshBtn = el('button', 'acct-btn acct-primary');
     refreshBtn.type = 'button';
@@ -395,8 +400,9 @@
       '<span class="acct-ic">' + GMAIL_MARK + '</span>' +
       '<span class="rb-label">Refresh<span class="rb-long"> from Gmail</span></span>';
     refreshBtn.title = 'Read your mailbox for anything new';
+    refreshBtn.setAttribute('aria-label', 'Refresh from Gmail');
     refreshBtn.addEventListener('click', refresh);
-    actions.appendChild(refreshBtn);
+    actions.insertBefore(refreshBtn, actions.firstChild);
 
 
 
