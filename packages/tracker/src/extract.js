@@ -200,18 +200,20 @@
     var first = ordered[0];
     if (!first) return null;
 
-    /* The owner's own lists, in this order of precedence:
-     *   1. a whitelist phrase in the subject keeps the thread, whatever else;
-     *   2. a blacklist word in the subject drops it — those are the digests;
-     *   3. a whitelist phrase in the body keeps what is left.
-     * Letting a body hit beat a blacklisted subject let digests through: an
-     * alert's small print says "make your application stand out", a match
-     * nag says "based on your application history". The corpus has both. */
+    /* The owner's own lists, weighed rather than ranked. Subject and body both
+     * count, the subject three times as much: a list word in the subject is
+     * about the email, one in the body may only be small print. Each list
+     * scores once per place however many of its words turn up — "see new",
+     * "new jobs" and "see new jobs" are one signal, not three. Whitelist adds,
+     * blacklist and ignoreSubjects subtract; below zero is junk. */
     var all = ordered.map(function (m) { return m.subject + '\n' + (m.body || ''); }).join('\n');
-    var subjWhite = listHit(rules.whitelist, first.subject);
-    var black = listHit(rules.blacklist, first.subject) || isNoise(first, rules);
-    if (black && !subjWhite) return null;
-    var white = subjWhite || listHit(rules.whitelist, all);
+    var ws = listHit(rules.whitelist, first.subject) ? 1 : 0;
+    var wb = listHit(rules.whitelist, all) ? 1 : 0;
+    var bs = (listHit(rules.blacklist, first.subject) || isNoise(first, rules)) ? 1 : 0;
+    var bb = listHit(rules.blacklist, all) ? 1 : 0;
+    var score = 3 * ws + wb - 3 * bs - bb;
+    if (score < 0) return null;
+    var white = !!(ws || wb);
 
     /* Before any of the wording rules get a vote: is this even about a job?
      * "unsuccessful" is the word a rejection uses and also the word a declined

@@ -100,13 +100,14 @@ One label *excludes*: `excludeLabels` in rules.json (currently `Job Alerts`),
 and only if that label exists in the mailbox — the sweep asks Gmail for the
 label list first and drops any that are not there.
 
-The owner's `whitelist` and `blacklist` are case-insensitive, with this
-precedence: a whitelist phrase in the **subject** keeps a thread whatever else
-it says; otherwise a blacklist word (or `ignoreSubjects`) in the subject drops
-it; otherwise a whitelist phrase in the **body** keeps it. Letting a body hit
-beat a blacklisted subject let digests through — alert small print says "make
-your application stand out". A whitelist hit with no status wording reads as
-Awaiting; the status rules still decide Rejected, Interview and the rest.
+The owner's `whitelist` and `blacklist` are case-insensitive and *weighed*:
+each list scores once in the subject (×3) and once in the body (×1), whitelist
+adding and blacklist (plus `ignoreSubjects`) subtracting; below zero is junk.
+Once per place, not per word — "see new", "new jobs" and "see new jobs" are one
+signal, or the real LinkedIn confirmation (whose body says "View job" and "See
+new jobs") would be outvoted. A whitelist hit with no status wording reads as
+Awaiting; the status rules still decide the outcome. `test/corpus.json` is what
+says whether a change to any of this is safe.
 
 What an applied refresh changes goes into `doc.alerts` (newest per row, capped
 at 60). Unseen alerts put a red dot on the row and a count on the bell; the

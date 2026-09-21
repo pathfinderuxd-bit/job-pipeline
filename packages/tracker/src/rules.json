@@ -238,7 +238,7 @@
   "excludeLabels": [
     "Job Alerts"
   ],
-  "_keywordComment": "Case-insensitive. Precedence: a whitelist phrase in the SUBJECT keeps a thread whatever else it says; otherwise a blacklist word (or ignoreSubjects) in the subject drops it; otherwise a whitelist phrase in the body keeps it. A whitelist hit with no status wording reads as Awaiting; the status rules still decide Rejected, Interview and the rest.",
+  "_keywordComment": "Case-insensitive, weighed not ranked. Each list scores once in the subject (worth 3) and once in the body (worth 1): whitelist adds, blacklist and ignoreSubjects subtract, and a total below zero is junk. A whitelist hit with no status wording reads as Awaiting; the status rules still decide Rejected, Interview and the rest.",
   "blacklist": [
     "alert",
     "new jobs",
