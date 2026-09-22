@@ -9,8 +9,8 @@
   wait, next. Do not hand over a numbered list of nine things.
 - **Only ask a question when the answer changes what happens next.** Otherwise
   pick the sensible option, say which in one line, and carry on.
-- **Never push, and never commit without being asked.** Show what changed and
-  wait.
+- **Never commit without being asked.** Show what changed and wait. Once a
+  commit has been made, follow "After committing" at the foot of this file.
 - **Never send email.** Gmail access is read-only and stays that way.
 - Real application data never reaches the repo or the hosted page.
 
@@ -261,3 +261,19 @@ extractor looks for. The one exception is on purpose — the captured employer o
 role must start with a capital, because that is all that tells "at Rivermead"
 from "at the moment". A whole-pattern /i flag loses that; the lead-in words are
 spelled out as [Aa][Tt] via ci() instead.
+
+---
+
+## After committing — always ask before pushing
+
+Never push straight after a commit. Commit the work, show what changed, then
+ask a single question offering both routes:
+
+1. **Here's the command** — give the exact `git push` line to run
+2. **I can push now** — push it on a yes
+
+Offer both, pick neither, and wait for the answer. This applies to every repo
+in this workspace, nested project repos included.
+
+The one exception is when the push was already asked for in the same message
+("commit and push", "push it up") — then just do it and say so.
