@@ -279,14 +279,39 @@
   /* ---------------------------------------------------------- Drive toasts -- */
 
   var saveToast = null;
-  function saveStatus(state) {
+  function saveStatus(state, detail) {
     if (state === 'saving') {
       saveToast = toast({ id: 'drive', text: 'Saving to Google Drive…', tone: 'busy', timeout: 0 });
     } else if (state === 'saved') {
       saveToast = toast({ id: 'drive', text: 'Saved to Google Drive', tone: 'good', timeout: 2200 });
     } else if (state === 'error') {
-      saveToast = toast({ id: 'drive', text: 'Could not save to Drive — your edits are still ' +
-                          'in this browser', tone: 'bad', timeout: 6000 });
+      /* "Could not save" on its own sent people looking for a bug in the page.
+       * Nearly every failure is the token: Google's last about an hour, so a
+       * tab left open all morning saves nothing until it is signed in again.
+       * Say which it is, and offer the one thing that fixes it. */
+      var err = (detail && detail.error) || null;
+      var why = err && err.message ? String(err.message) : '';
+      var auth = /token|sign in|permission|scope|401/i.test(why);
+      saveToast = toast({
+        id: 'drive',
+        text: auth
+          ? 'Google needs you to sign in again before this can save. Your edits are safe in this browser.'
+          : 'Could not save to Drive — your edits are still in this browser' +
+            (why ? ' (' + why.slice(0, 120) + ')' : ''),
+        tone: 'bad',
+        timeout: auth ? 0 : 8000,
+        action: auth ? { label: 'Sign in again', onClick: function () {
+          /* Deliberately not store.open(): the document in hand is the one
+           * with the unsaved edits in it. Re-attach the drive and push it. */
+          root.Google.signIn().then(function () {
+            store.attachDrive(root.Google.drive);
+            store.touch();
+            return store.flush();
+          }).catch(function (e) {
+            toast({ text: 'That did not work: ' + (e && e.message ? e.message : e), tone: 'bad' });
+          });
+        } } : null
+      });
     }
   }
 
@@ -650,6 +675,7 @@
       if (e.cv) out.cv = e.cv;
       if (e.cl) out.cl = e.cl;
       if (e.jd) out.jd = e.jd;
+      if (e.link) out.link = e.link;
       if (e.star) out.star = '1';
       out.manual = e.manual || {};
       return out;
