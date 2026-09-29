@@ -1587,3 +1587,26 @@ tr[data-s="idea"] .pill{border-color:var(--idea-line);background:var(--idea-soft
 .monbtn[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-on)}
 .monbtn:hover{border-color:var(--ink-3)}
 .qf-mon[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-on)}
+
+/* The leads card sits apart: same size as the rest, but behind a hairline, so
+   the row reads as "the applications … and separately, things not applied for".
+   The grid is auto-fit, so the divider takes a track of its own rather than
+   being a border on the card, which would wander when the row wraps. */
+/* Flex rather than the auto-fit grid above: a grid gives the divider a whole
+   180px track, which is a gap, not a rule. Flex lets the cards share the row
+   and the hairline take the 1px it needs. */
+.tally{display:flex;flex-wrap:wrap;align-items:stretch}
+.tally .tstat{flex:1 1 180px;min-width:180px}
+.tally .tdiv{
+  flex:0 0 1px;width:1px;align-self:stretch;
+  background:var(--line-strong);border-radius:1px;
+}
+.tally .t-idea b{color:var(--idea)}
+.tally .t-idea[aria-pressed="true"]{
+  border-color:var(--idea);box-shadow:inset 0 0 0 1px var(--idea);
+}
+.tally .t-idea[aria-pressed="true"] .tic{background:var(--idea);color:var(--ground)}
+@media (max-width:700px){
+  /* Stacked, a vertical hairline makes no sense — lay it across instead. */
+  .tally .tdiv{width:auto;height:1px;align-self:auto;justify-self:stretch;margin:2px 0}
+}

@@ -14,6 +14,24 @@
 - **Never send email.** Gmail access is read-only and stays that way.
 - Real application data never reaches the repo or the hosted page.
 
+## Two places this work happens
+
+The repo lives on the owner's Mac at `~/Claude Repo/Projects/job-pipeline`, and
+two kinds of session touch it:
+
+- **Claude Code, in a terminal on that Mac** — the place to build. Direct file
+  access, fast test and build loops, and `git push` works, because it runs on
+  the owner's own network with his git credentials.
+- **Cowork, in the cloud** — the place for the Gmail side: sweeping the inbox,
+  diffing what it finds against an exported `job-pipeline-*.json`, working out
+  why a particular email was not picked up. It reaches the repo through a
+  connected folder, and GitHub is blocked from it by the egress allowlist, so a
+  Cowork session commits and tags but leaves the push to the owner.
+
+Whichever side you are, the rules above apply, and a change is finished the
+same way: tests, `npm run check`, a build, then a commit that waits to be
+pushed.
+
 Read `README.md` first — it covers the layout, the data shape and how to build.
 This file is the stuff that isn't obvious from reading the code.
 

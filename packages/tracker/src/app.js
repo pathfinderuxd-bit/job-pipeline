@@ -1389,7 +1389,8 @@ window.TrackerApp = function(){
     stats.forEach(function(b){
       var f = b.getAttribute('data-f');
       var num = b.querySelector('b');
-      if (num) num.textContent = (f === 'all') ? rows.length : counts[f];
+      /* A lead is not an application, so the total is every row bar those. */
+      if (num) num.textContent = (f === 'all') ? (rows.length - counts.idea) : counts[f];
     });
     renderLive();
     renderStarred();

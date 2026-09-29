@@ -151,11 +151,12 @@ var RANK = { live: 0, lead: 1, wait: 2, idea: 3, shut: 4 };
     var c = counts(list);
     return function (text) {
       return String(text || '')
-        .replace(/\{\{N\}\}/g, (list || []).length)
+        .replace(/\{\{N\}\}/g, (list || []).length - c.idea)
         .replace(/\{\{LIVE\}\}/g, c.live)
         .replace(/\{\{WAIT\}\}/g, c.wait)
         .replace(/\{\{LEAD\}\}/g, c.lead)
         .replace(/\{\{SHUT\}\}/g, c.shut)
+        .replace(/\{\{IDEA\}\}/g, c.idea)
         .replace(/\{\{UPDATED\}\}/g, niceWhen(site && site.updated));
     };
   }
