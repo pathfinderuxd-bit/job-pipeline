@@ -277,3 +277,38 @@ in this workspace, nested project repos included.
 
 The one exception is when the push was already asked for in the same message
 ("commit and push", "push it up") — then just do it and say so.
+
+## Why a sweep's change sometimes did not show (fixed in v1.10.0)
+
+`persist()` caches the whole row — status, dates, company, role — every time
+anything on it is touched, and `restoreSaved()` replayed that cache over the
+rows on every redraw. So a row you had once touched kept repainting its old
+status after a sweep or an import, and 67 of 90 rows had such a cache.
+
+Two rules now keep that honest:
+
+- a cached status, applied date or updated date is replayed only when the row
+  carries a manual flag for that field — a deliberate edit, not a snapshot;
+- accepting a change in the refresh screen clears the cached copy of the field
+  it replaced, via `store.forgetRowFields(id, fields)`.
+
+## Job lead, and the link to the advert
+
+`idea` is a fifth status, purple, chip "Job lead": a job found but not applied
+for. It is manual only — no sweep assigns it — and it is left out of Needs
+chasing, since there is nothing to chase.
+
+Every row's role text opens the advert. `Render.roleCell(role, link)` draws the
+cell, so the editor and the restore path rebuild it rather than each inventing
+markup. The link lives on `data-link` and in the row's saved state.
+
+## Months, and popovers that stay on screen
+
+Which months are ticked is a view setting, kept in `store.prefs()` — part of
+the document that syncs to Drive, so it follows the account to another device
+rather than sitting in one browser.
+
+`placePanel(el, btn)` positions every popover: it clamps the anchor into the
+viewport first, caps the panel to the screen and scrolls inside itself, so
+nothing can land where it cannot be reached. Scrolling and resizing move the
+panel with its button, and close it only once the button itself has gone.

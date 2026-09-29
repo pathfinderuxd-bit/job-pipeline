@@ -96,7 +96,9 @@
       <button type="button" class="qf" id="qf-live" data-f="live" aria-pressed="false"><span class="dot dot-live"></span>Live</button>
       <button type="button" class="qf" id="qf-lead" data-f="lead" aria-pressed="false"><span class="dot dot-lead"></span>In progress</button>
       <button type="button" class="qf" id="qf-wait" data-f="wait" aria-pressed="false"><span class="dot dot-wait"></span>Awaiting</button>
+      <button type="button" class="qf" id="qf-idea" data-f="idea" aria-pressed="false"><span class="dot dot-idea"></span>Job lead</button>
       <button type="button" class="qf" id="qf-shut" data-f="shut" aria-pressed="false"><span class="dot dot-shut"></span>Closed</button>
+      <button type="button" class="qf qf-mon" id="qf-months" aria-pressed="false" aria-haspopup="true" aria-expanded="false"><span class="qf-mon-l">Months</span><span class="qf-mon-c" aria-hidden="true">&#9662;</span></button>
       <button type="button" class="qf qf-stale" id="qf-stale" data-f="stale" aria-pressed="false" hidden>Needs chasing <span class="qf-n" id="stale-n">0</span></button>
       <button type="button" class="addbtn" id="addrow">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add
@@ -169,6 +171,23 @@
     </div>
   </dialog>
 
+  <div class="menu mon-menu mon-row" id="mon-menu" role="group" aria-label="Filter by month" hidden></div>
+
+  <dialog class="edit lk" id="lkdlg" aria-labelledby="lk-title">
+    <form method="dialog" id="linkform">
+      <div class="ed-head"><span id="lk-title">Link to the job</span></div>
+      <div class="ed-body">
+        <label class="full">Web address<input type="text" inputmode="url" id="lk-url" placeholder="https://" spellcheck="false" autocomplete="off"></label>
+        <p class="lk-hint" id="lk-hint">Paste the advert&#8217;s address. The role name then opens it in a new tab.</p>
+      </div>
+      <div class="ed-foot">
+        <button type="button" class="btn-ghost" id="lk-remove">Remove</button>
+        <button type="button" class="btn-ghost" id="lk-cancel">Cancel</button>
+        <button type="submit" class="btn-primary" id="lk-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog class="edit cl" id="jddlg" aria-labelledby="jd-title">
     <div class="ed-head cl-head">
       <span id="jd-title">Job description</span>
@@ -206,6 +225,7 @@
         <label>Updated<input type="date" id="ed-updated"></label>
         <label>Source<select id="ed-src"></select></label>
         <label>Via label<input type="text" id="ed-via" autocomplete="off" placeholder="e.g. Indeed &#8594; Recruitee"></label>
+        <label class="full">Job link<input type="text" inputmode="url" id="ed-link" autocomplete="off" placeholder="https://"></label>
         <label class="full">CV used<select id="ed-cv"></select></label>
       </div>
       <div class="ed-foot">

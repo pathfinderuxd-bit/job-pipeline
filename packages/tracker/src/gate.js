@@ -993,6 +993,30 @@
           merged.applied.added++;
         });
       }
+      /* An accepted change has to clear the row's cached copy of the old value,
+       * or restoreSaved paints it straight back on the next redraw. */
+      var EDIT_KEY = { status: ['s'], chip: ['label'], updated: ['updShown'],
+                       updatedSort: ['updated'], applied: ['date'], appliedSort: ['applied'],
+                       company: ['co'], role: ['role'], note: ['note'],
+                       source: ['via'], sourceLabel: ['viaLabel'], type: ['type'] };
+      function forget(key, fields) {
+        var r = byKeyMerged[key];
+        if (!r) return;
+        var id = root.Render.idOf(r), drop = [];
+        fields.forEach(function (f) {
+          (EDIT_KEY[f.field] || []).forEach(function (k) { drop.push(k); });
+          drop.push(f.field);
+        });
+        if (drop.length && store.forgetRowFields) store.forgetRowFields(id, drop);
+      }
+      var byKeyMerged = {};
+      merged.rows.forEach(function (r) { byKeyMerged[root.Merge.keyOf(r)] = r; });
+      report.changed.forEach(function (c) { if (!skipChanged[c.key]) forget(c.key, c.fields); });
+      report.conflicts.forEach(function (c) {
+        var took = c.fields.filter(function (f) { return picks[c.key + '::' + f.field]; });
+        if (took.length) forget(c.key, took);
+      });
+
       store.setApplications(merged.rows.map(function (r) {
         var copy = {};
         Object.keys(r).forEach(function (k) { if (k !== 'manual') copy[k] = r[k]; });

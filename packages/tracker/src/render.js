@@ -14,7 +14,7 @@
   /* Sort order down the table. Four buckets, warmest first: a booked
  * conversation, an application the employer is visibly working on, one that
  * has gone quiet, and one that is finished. */
-var RANK = { live: 0, lead: 1, wait: 2, shut: 3 };
+var RANK = { live: 0, lead: 1, wait: 2, idea: 3, shut: 4 };
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -70,6 +70,28 @@ var RANK = { live: 0, lead: 1, wait: 2, shut: 3 };
     '<path d="M6.5 7 7.5 19a2 2 0 0 0 2 1.9h5a2 2 0 0 0 2-1.9L17.5 7"/>' +
     '<path d="M9.5 7V5.2a1.2 1.2 0 0 1 1.2-1.2h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/></svg>';
 
+  /* The role doubles as the way in to the advert. With a link saved the text
+   * opens it; without one the same click opens the box that takes it, which is
+   * what the little plus is announcing. Built here and reused by the editor so
+   * a rename cannot quietly drop the link back out of the cell. */
+  function roleCell(role, link) {
+    var has = !!String(link || '').trim();
+    return '<span class="rolewrap">' +
+      '<button type="button" class="rolet' + (has ? ' has-link' : '') + '" ' +
+        'title="' + (has ? 'Open the job advert' : 'Add a link to the job advert') + '">' +
+        esc(role || '') + '</button>' +
+      '<button type="button" class="linkbtn" ' +
+        'aria-label="' + (has ? 'Change the job link' : 'Add the job link') + '" ' +
+        'title="' + (has ? 'Change the job link' : 'Add the job link') + '">' +
+        (has ? LINK_SVG : '+') + '</button>' +
+      '</span>';
+  }
+
+  var LINK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M14 5h5v5"/><path d="M19 5l-7.5 7.5"/>' +
+    '<path d="M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-9A1.5 1.5 0 0 1 6 18.5v-9A1.5 1.5 0 0 1 7.5 8H12"/></svg>';
+
   function rowHtml(a) {
     var status = a.status || 'wait';
     var type = a.type || 'Full-Time';
@@ -87,7 +109,8 @@ var RANK = { live: 0, lead: 1, wait: 2, shut: 3 };
       '" data-co="' + esc(String(a.company || '').toLowerCase()) +
       '" data-role="' + esc(String(a.role || '').toLowerCase()) +
       '" data-rank="' + (RANK[status] == null ? 1 : RANK[status]) +
-      '" data-cv="' + esc(cv) + '" data-cl="" data-jd="" data-star="0">' +
+      '" data-cv="' + esc(cv) + '" data-cl="" data-jd="" data-star="0"' +
+      ' data-link="' + esc(a.link || '') + '">' +
       '<td class="c-star"><button type="button" class="starbtn" aria-pressed="false" ' +
         'aria-label="Star this application">' + STAR_SVG + '</button></td>' +
       '<td class="c-status"><button type="button" class="pill">' +
@@ -97,7 +120,7 @@ var RANK = { live: 0, lead: 1, wait: 2, shut: 3 };
         '<span class="coav" aria-hidden="true">' + esc(initial(a.company)) + '</span>' +
         '<button type="button" class="copill">' + esc(a.company || '') + '</button>' +
         '</span></td>' +
-      '<td class="c-role">' + esc(a.role || '') + note + '</td>' +
+      '<td class="c-role">' + roleCell(a.role, a.link) + note + '</td>' +
       '<td class="c-type"><span class="cellf"><span class="tyi">' + icon +
         '</span><span>' + esc(type) + '</span></span></td>' +
       '<td class="c-src"><span class="cellf"><span class="vlogo ' + badge[1] + '">' + badge[0] +
@@ -119,7 +142,7 @@ var RANK = { live: 0, lead: 1, wait: 2, shut: 3 };
   /* ------------------------------------------------------ masthead + cards -- */
 
   function counts(list) {
-    var c = { live: 0, lead: 0, wait: 0, shut: 0 };
+    var c = { live: 0, lead: 0, wait: 0, idea: 0, shut: 0 };
     (list || []).forEach(function (a) { if (c[a.status] != null) c[a.status]++; });
     return c;
   }
@@ -214,7 +237,7 @@ var RANK = { live: 0, lead: 1, wait: 2, shut: 3 };
     renderInsights(list, site || {});
   }
 
-  root.Render = { all: all, rows: renderRows, rowHtml: rowHtml, idOf: idOf,
+  root.Render = { all: all, rows: renderRows, rowHtml: rowHtml, roleCell: roleCell, idOf: idOf,
                   initial: initial, build: renderBuild, when: niceWhen,
                   mast: renderMast, insights: renderInsights, counts: counts };
 

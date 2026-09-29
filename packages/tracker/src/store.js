@@ -36,7 +36,10 @@
        * null means "nothing chosen yet, fall back to a committed baseline" */
       applications: null,
       /* per-row UI state and hand-edits, keyed by row id */
-      rows: {}, deleted: []
+      rows: {}, deleted: [],
+      /* view settings that follow the account rather than the browser, so the
+       * months you last ticked are the months you see on the other machine */
+      prefs: {}
     };
   }
 
@@ -75,6 +78,7 @@
     this.key = PREFIX + String(account || 'local').toLowerCase();
     this.doc = readLocal(this.key) || blank(account, '');
     if (this.doc.schema !== SCHEMA) this.doc = this.upgrade(this.doc, account);
+    if (!this.doc.prefs) this.doc.prefs = {};
     this.doc.account = account || this.doc.account;
     return this.doc;
   };
@@ -89,6 +93,15 @@
 
   /* Per-row edits, the shape app.js already works with. */
   Store.prototype.rows = function () { return this.doc.rows; };
+
+  Store.prototype.prefs = function () {
+    return this.doc.prefs || (this.doc.prefs = {});
+  };
+
+  Store.prototype.setPref = function (key, value) {
+    this.prefs()[key] = value;
+    this.touch();
+  };
 
   /* The application list. Null until a baseline is chosen or a sweep lands. */
   Store.prototype.applications = function () { return this.doc.applications; };
@@ -111,6 +124,24 @@
   Store.prototype.markManual = function (id, field) {
     var r = this.doc.rows[id] || (this.doc.rows[id] = {});
     (r.manual || (r.manual = {}))[field] = true;
+  };
+
+  /* persist() caches the whole row, so a row you once touched carries a copy of
+   * its old status for ever. When a sweep's change is accepted, that copy has
+   * to go with it — along with any manual flag on the same field — or the page
+   * redraws the value the sweep just replaced. */
+  Store.prototype.forgetRowFields = function (id, fields) {
+    var r = this.doc.rows[id];
+    if (!r) return;
+    (fields || []).forEach(function (f) {
+      delete r[f];
+      if (r.manual) delete r.manual[f];
+    });
+    var left = Object.keys(r).filter(function (k) {
+      return k !== 'manual' && r[k] !== undefined;
+    });
+    if (!left.length && (!r.manual || !Object.keys(r.manual).length)) delete this.doc.rows[id];
+    this.touch();
   };
 
   Store.prototype.markDeleted = function (mergeKey) {

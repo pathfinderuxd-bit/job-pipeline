@@ -1536,3 +1536,54 @@ dialog.cvl{max-height:min(86vh,900px)}
   .chrome-actions #refreshbtn .rb-label{display:none}
   .chrome-actions #refreshbtn .acct-ic{width:18px;height:18px}
 }
+
+
+/* ============================================================
+   v1.10 — Job lead, the link to the advert, and month filters
+   ============================================================ */
+
+/* Purple, and only purple: nothing else in the app uses it, so a lead reads
+   as a different kind of thing rather than another stage of an application. */
+:root{
+  --idea:#7C5CD6;
+  --idea-dot:#8B6BE8;
+  --idea-soft:color-mix(in srgb, #7C5CD6 12%, transparent);
+  --idea-line:color-mix(in srgb, #7C5CD6 38%, transparent);
+}
+:root:not([data-theme="light"]) .dot-idea,
+:root[data-theme="dark"] .dot-idea{background:var(--idea-dot)}
+.dot-idea{background:var(--idea-dot)}
+.tally .t-idea b{color:var(--idea)}
+tr[data-s="idea"] .pill{border-color:var(--idea-line);background:var(--idea-soft)}
+
+/* The role is the way in to the advert: dotted underline says "there is more
+   here", the plus says the more is not saved yet. */
+.rolewrap{display:inline-flex;align-items:baseline;gap:6px;max-width:100%}
+.rolet{
+  font:inherit;color:inherit;background:none;border:0;padding:0;text-align:left;
+  cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;
+  text-decoration-color:var(--ink-3);overflow-wrap:anywhere;
+}
+.rolet:hover{text-decoration-color:var(--brand);color:var(--brand)}
+.rolet.has-link{text-decoration-style:dotted;text-decoration-color:var(--brand)}
+.linkbtn{
+  flex:0 0 auto;width:20px;height:20px;line-height:1;padding:0;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:none;border:1px dashed var(--line-strong);border-radius:var(--r-sm,6px);
+  color:var(--ink-3);font-size:13px;font-family:inherit;
+}
+.linkbtn:hover{color:var(--brand);border-color:var(--brand)}
+.rolet.has-link ~ .linkbtn{border-style:solid;color:var(--brand)}
+.linkbtn svg{width:12px;height:12px;display:block}
+.lk-hint{margin:8px 0 0;color:var(--ink-3);font-size:var(--t-xs,12px);grid-column:1/-1}
+
+/* Month chips: many can be on at once, so they are ticks, not a radio set. */
+.mon-row{display:flex;flex-wrap:wrap;gap:6px;padding:6px 6px 2px}
+.monbtn{
+  font-family:inherit;font-size:var(--t-xs,12px);line-height:1;cursor:pointer;
+  padding:6px 10px;border-radius:var(--r-full,999px);
+  border:1px solid var(--line-strong);background:none;color:var(--ink-2);
+}
+.monbtn[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-on)}
+.monbtn:hover{border-color:var(--ink-3)}
+.qf-mon[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-on)}

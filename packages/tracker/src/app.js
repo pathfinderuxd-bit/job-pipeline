@@ -8,8 +8,8 @@ window.TrackerApp = function(){
   var resetBtn = document.getElementById('resetall');
 
   var stats = Array.prototype.slice.call(document.querySelectorAll('.tstat'));
-  var STATUS_LABEL = {live:'Live', lead:'In progress', wait:'Awaiting', shut:'Closed out'};
-  var filters = {s:'', date:'', via:'', type:'', cv:'', stale:false, q:''};
+  var STATUS_LABEL = {live:'Live', lead:'In progress', wait:'Awaiting', idea:'Job lead', shut:'Closed out'};
+  var filters = {s:'', date:'', via:'', type:'', cv:'', stale:false, q:'', months:{}};
   var sortKey = 'applied', sortDir = 'desc';
 
   function uniq(attr){
@@ -41,6 +41,41 @@ window.TrackerApp = function(){
     try { localStorage.setItem(STORE, JSON.stringify(o)); } catch (e) {}
   }
   var STATE = loadStore();
+
+  /* ---------- months ----------
+   * Which months are ticked is a view setting, not a row edit, so it lives in
+   * the account's prefs: set it on the laptop, and the phone opens the same
+   * view. A month is read off data-applied (YYYYMMDD), so no extra field has
+   * to be kept in step. */
+  var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function monthOf(tr){
+    var n = String(tr.getAttribute('data-applied') || '');
+    return n.length >= 6 ? n.slice(0, 6) : '';
+  }
+  function monthLabel(k){
+    var m = Number(k.slice(4, 6)) - 1;
+    return (MONTH_NAMES[m] || k) + ' ' + k.slice(2, 4);
+  }
+  function monthsOnPage(){
+    var seen = {}, out = [];
+    rows.forEach(function(r){
+      var k = monthOf(r);
+      if (k && !seen[k]){ seen[k] = 1; out.push(k); }
+    });
+    return out.sort().reverse();
+  }
+  function savedMonths(){
+    if (!SHELF || !SHELF.prefs) return null;
+    var p = SHELF.prefs().months;
+    return Array.isArray(p) ? p : null;
+  }
+  function saveMonths(){
+    if (!SHELF || !SHELF.setPref) return;
+    SHELF.setPref('months', Object.keys(filters.months).filter(function(k){ return filters.months[k]; }));
+  }
+  function monthsOn(){
+    return Object.keys(filters.months).filter(function(k){ return filters.months[k]; });
+  }
 
   /* The stale badge ("22d") is a child of the updated cell, so reading the
    * cell's textContent gets "24 Aug22d" — and saving that makes it permanent,
@@ -82,6 +117,7 @@ window.TrackerApp = function(){
       cv: tr.getAttribute('data-cv'),
       cl: tr.getAttribute('data-cl') || '',
       jd: tr.getAttribute('data-jd') || '',
+      link: tr.getAttribute('data-link') || '',
       star: tr.getAttribute('data-star') === '1'
     };
     writeStore(STATE);
@@ -159,6 +195,48 @@ window.TrackerApp = function(){
     } else { jdText.select(); document.execCommand('copy'); done(); }
   });
 
+  /* ---------- the link to the advert ---------- */
+  var lkDlg = document.getElementById('lkdlg');
+  var lkUrl = document.getElementById('lk-url');
+  var lkRow = null;
+
+  function tidyUrl(v){
+    var t = String(v || '').trim();
+    if (!t) return '';
+    return /^https?:\/\//i.test(t) ? t : 'https://' + t.replace(/^\/+/, '');
+  }
+
+  function saveLink(tr, href){
+    tr.setAttribute('data-link', href);
+    setRole(tr, roleOf(tr), noteOf(tr), href);
+    persist(tr);
+  }
+
+  function openLink(tr){
+    if (!lkDlg) return;
+    lkRow = tr;
+    document.getElementById('lk-title').textContent = 'Link to the job \u2014 ' + coOf(tr);
+    lkUrl.value = linkOf(tr);
+    var rm = document.getElementById('lk-remove');
+    if (rm) rm.hidden = !linkOf(tr);
+    lkDlg.showModal();
+    lkUrl.focus();
+  }
+
+  if (lkDlg){
+    document.getElementById('linkform').addEventListener('submit', function(){
+      if (!lkRow) return;
+      saveLink(lkRow, tidyUrl(lkUrl.value));
+      lkRow = null;
+    });
+    document.getElementById('lk-cancel').addEventListener('click', function(){ lkDlg.close(); });
+    document.getElementById('lk-remove').addEventListener('click', function(){
+      if (lkRow) saveLink(lkRow, '');
+      lkRow = null;
+      lkDlg.close();
+    });
+  }
+
   /* ---------- cover letter ---------- */
   var clDlg = document.getElementById('cldlg');
   var clText = document.getElementById('cl-text');
@@ -216,6 +294,7 @@ window.TrackerApp = function(){
     ['live', 'Interview'], ['live', 'Screening'],
     ['lead', 'In progress'],
     ['wait', 'Awaiting'],
+    ['idea', 'Job lead'],
     ['shut', 'Not shortlisted'], ['shut', 'Withdrew']
   ];
 
@@ -231,7 +310,25 @@ window.TrackerApp = function(){
     if (av && window.Render && window.Render.initial) av.textContent = window.Render.initial(v);
   }
 
+  /* Role text and its link marker are one cell, drawn by the renderer, so the
+   * editor and the restore path rebuild it rather than each inventing markup. */
+  function linkOf(tr){ return tr.getAttribute('data-link') || ''; }
+  function setRole(tr, role, note, link){
+    var cell = tr.querySelector('.c-role');
+    cell.innerHTML = window.Render.roleCell(role, link == null ? linkOf(tr) : link);
+    tr.setAttribute('data-role', String(role || '').toLowerCase());
+    if (link != null) tr.setAttribute('data-link', link);
+    if (note){
+      var nn = document.createElement('span');
+      nn.className = 'note';
+      nn.textContent = note;
+      cell.appendChild(nn);
+    }
+  }
+
   function roleOf(tr){
+    var t = tr.querySelector('.c-role .rolet');
+    if (t) return t.textContent.trim();
     var cell = tr.querySelector('.c-role').cloneNode(true);
     var n = cell.querySelector('.note');
     if (n) n.parentNode.removeChild(n);
@@ -332,6 +429,16 @@ window.TrackerApp = function(){
     if (cop){ e.stopPropagation(); closeMenu(); openJd(cop.closest('tr')); return; }
     var cl = e.target.closest('.clbtn');
     if (cl){ e.stopPropagation(); closeMenu(); openCover(cl.closest('tr')); return; }
+    var lk = e.target.closest('.linkbtn');
+    if (lk){ e.stopPropagation(); closeMenu(); openLink(lk.closest('tr')); return; }
+    var rt = e.target.closest('.rolet');
+    if (rt){
+      e.stopPropagation(); closeMenu();
+      var rtr = rt.closest('tr'), href = linkOf(rtr);
+      if (href) window.open(href, '_blank', 'noopener');
+      else openLink(rtr);
+      return;
+    }
     var more = e.target.closest('.rowbtn');
     if (more){ e.stopPropagation(); closeMenu(); openEditor(more.closest('tr')); }
   });
@@ -453,6 +560,7 @@ window.TrackerApp = function(){
   var edCo = document.getElementById('ed-co');
   var edRole = document.getElementById('ed-role');
   var edNote = document.getElementById('ed-note');
+  var edLink = document.getElementById('ed-link');
   var edStatus = document.getElementById('ed-status');
   var edType = document.getElementById('ed-type');
   var edApplied = document.getElementById('ed-applied');
@@ -503,18 +611,15 @@ window.TrackerApp = function(){
     rows.forEach(function(tr){
       var st = STATE[tr.getAttribute('data-id')];
       if (!st) return;
-      if (st.s && st.label) setStatusQuiet(tr, st.s, st.label);
+      /* A deliberate edit outranks the sweep; a cached copy of what the row
+       * used to say does not. Without this test every row you had ever touched
+       * replayed its old status over whatever the last refresh brought in. */
+      var man = st.manual || {};
+      if (st.s && st.label && (man.status || man.chip)) setStatusQuiet(tr, st.s, st.label);
       if (st.co){ setCo(tr, st.co); tr.setAttribute('data-co', st.co.toLowerCase()); }
-      if (typeof st.role === 'string' && st.role){
-        var rc = tr.querySelector('.c-role');
-        rc.textContent = st.role;
-        tr.setAttribute('data-role', st.role.toLowerCase());
-        if (st.note){
-          var nn = document.createElement('span');
-          nn.className = 'note'; nn.textContent = st.note;
-          rc.appendChild(nn);
-        }
-      }
+      if (st.link !== undefined) tr.setAttribute('data-link', st.link || '');
+      if (typeof st.role === 'string' && st.role) setRole(tr, st.role, st.note, st.link);
+      else if (st.link !== undefined) setRole(tr, roleOf(tr), noteOf(tr), st.link);
       if (st.type){
         tr.setAttribute('data-type', st.type);
         tr.querySelector('.c-type').innerHTML =
@@ -528,12 +633,12 @@ window.TrackerApp = function(){
           '<span class="cellf"><span class="vlogo ' + b[1] + '">' + b[0] + '</span><span></span></span>';
         tr.querySelector('.c-src .cellf > span:last-child').textContent = st.viaLabel || st.via;
       }
-      if (st.applied !== undefined){
+      if (st.applied !== undefined && man.applied){
         tr.setAttribute('data-applied', st.applied);
         tr.setAttribute('data-date', st.date);
         tr.querySelector('.c-date').textContent = st.date;
       }
-      if (st.updated !== undefined){
+      if (st.updated !== undefined && man.updated){
         tr.setAttribute('data-updated', st.updated);
         var uc = tr.querySelector('.c-upd');
         uc.textContent = st.updShown;
@@ -591,6 +696,7 @@ window.TrackerApp = function(){
     edCo.value = coOf(tr);
     edRole.value = roleOf(tr);
     edNote.value = noteOf(tr);
+    if (edLink) edLink.value = linkOf(tr);
     edStatus.value = tr.getAttribute('data-s') + '|' + tr.querySelector('.pill').textContent.trim();
     if (!edStatus.value || edStatus.selectedIndex < 0) edStatus.selectedIndex = 0;
     edType.value = tr.getAttribute('data-type') || '';
@@ -622,22 +728,14 @@ window.TrackerApp = function(){
 
     /* Everything the editor touches is a deliberate decision, so a later Gmail
      * sweep has to ask before changing any of it. */
-    markManual(tr, ['status', 'chip', 'note', 'applied', 'updated', 'sourceLabel']);
+    markManual(tr, ['status', 'chip', 'note', 'applied', 'updated', 'sourceLabel', 'company', 'role']);
 
     setStatusQuiet(tr, st[0], st[1]);
 
     setCo(tr, edCo.value);
     tr.setAttribute('data-co', edCo.value.toLowerCase());
 
-    var roleCell = tr.querySelector('.c-role');
-    roleCell.textContent = edRole.value;
-    tr.setAttribute('data-role', edRole.value.toLowerCase());
-    if (edNote.value){
-      var nn = document.createElement('span');
-      nn.className = 'note';
-      nn.textContent = edNote.value;
-      roleCell.appendChild(nn);
-    }
+    setRole(tr, edRole.value, edNote.value, edLink ? edLink.value.trim() : linkOf(tr));
 
     var ty = edType.value;
     tr.setAttribute('data-type', ty);
@@ -1010,7 +1108,7 @@ window.TrackerApp = function(){
       menu.appendChild(lab2);
 
       var vals, labels;
-      if (fkey === 's'){ vals = ['live','lead','wait','shut']; labels = vals.map(function(v){ return '<span class="dot dot-' + v + '"></span>' + STATUS_LABEL[v]; }); }
+      if (fkey === 's'){ vals = ['live','lead','wait','idea','shut']; labels = vals.map(function(v){ return '<span class="dot dot-' + v + '"></span>' + STATUS_LABEL[v]; }); }
       else if (fkey === 'date'){ vals = DATES; labels = DATES; }
       else if (fkey === 'type'){ vals = TYPES; labels = TYPES; }
       else if (fkey === 'cv'){ vals = CVS; labels = CVS.map(function(v){ return window.cvDisplayName ? window.cvDisplayName(v) : v; }); }
@@ -1025,38 +1123,43 @@ window.TrackerApp = function(){
     }
   }
 
-  /* The menu is position:fixed, so anything hanging below the fold cannot be
-   * scrolled to — the page moves and the menu does not. Give it whichever side
-   * of the button has room, and cap it to that room so it scrolls inside
-   * itself rather than off the screen. */
-  function placeMenu(btn){
+  /* Every popover in the page is position:fixed, so anything hanging past an
+   * edge cannot be scrolled to — the page moves and the popover does not. One
+   * placer for all of them: give it whichever side of the button has room, cap
+   * it to that room so it scrolls inside itself, and never let it start left
+   * of the screen or run off the right. */
+  function placePanel(el, btn){
+    var EDGE = 8, GAP = 4;
+    var vw = window.innerWidth, vh = window.innerHeight;
     var r = btn.getBoundingClientRect();
-    menu.hidden = false;
-    menu.style.maxHeight = '';
-    menu.style.top = '0px';
 
-    var mw = menu.offsetWidth;
-    var left = Math.min(r.left, window.innerWidth - mw - 12);
-    menu.style.left = Math.max(8, left) + 'px';
+    el.hidden = false;
+    el.style.position = 'fixed';
+    el.style.maxHeight = '';
+    el.style.maxWidth = (vw - EDGE * 2) + 'px';
+    el.style.top = '0px';
+    el.style.left = '0px';
 
-    var GAP = 4, EDGE = 10, MIN = 150;
-    var below = window.innerHeight - r.bottom - GAP - EDGE;
-    var above = r.top - GAP - EDGE;
-    var want = menu.scrollHeight;
+    var w = el.offsetWidth;
+    el.style.left = Math.max(EDGE, Math.min(r.left, vw - w - EDGE)) + 'px';
 
-    if (want <= below){
-      menu.style.top = (r.bottom + GAP) + 'px';
-    } else if (want <= above){
-      menu.style.top = (r.top - GAP - want) + 'px';
-    } else {
-      /* Neither side fits it whole. Take the roomier one and scroll inside. */
-      var useAbove = above > below;
-      var h = Math.max(MIN, useAbove ? above : below);
-      menu.style.maxHeight = h + 'px';
-      menu.style.top = useAbove ? Math.max(EDGE, r.top - GAP - h) + 'px'
-                                : (r.bottom + GAP) + 'px';
-    }
+    /* Never taller than the screen; scroll inside itself instead. */
+    var room = vh - EDGE * 2;
+    var want = Math.min(el.scrollHeight, room);
+    if (want < el.scrollHeight) el.style.maxHeight = want + 'px';
+
+    /* The anchor is clamped into the viewport first. A button sitting just
+     * under the fold used to throw the menu further down still, which is how
+     * one ended up somewhere you could never scroll to. */
+    var aTop = Math.max(EDGE, Math.min(r.top, vh - EDGE));
+    var aBot = Math.max(EDGE, Math.min(r.bottom, vh - EDGE));
+    var top = (aBot + GAP + want <= vh - EDGE) ? aBot + GAP
+            : (aTop - GAP - want >= EDGE)      ? aTop - GAP - want
+            : Math.max(EDGE, vh - EDGE - want);
+    el.style.top = top + 'px';
   }
+
+  function placeMenu(btn){ placePanel(menu, btn); }
 
   cols.forEach(function(btn){
     btn.setAttribute('aria-haspopup','true');
@@ -1070,6 +1173,29 @@ window.TrackerApp = function(){
       btn.setAttribute('aria-expanded','true');
     });
   });
+
+  /* Scrolling or resizing moves the button out from under its popover. Follow
+   * the button rather than closing on the first scroll event — the table
+   * scrolls sideways under a header menu, and a click that has to scroll the
+   * button into view was closing the menu it had just opened. Once the button
+   * itself has left the screen there is nothing to point at, so it closes. */
+  function offscreen(el){
+    var r = el.getBoundingClientRect();
+    return r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth;
+  }
+  function followPopovers(){
+    if (!menu.hidden && openFor){
+      if (offscreen(openFor)) closeMenu(); else placePanel(menu, openFor);
+    }
+    if (monMenu && !monMenu.hidden && monBtn){
+      if (offscreen(monBtn)){
+        monMenu.hidden = true;
+        monBtn.setAttribute('aria-expanded', 'false');
+      } else placePanel(monMenu, monBtn);
+    }
+  }
+  window.addEventListener('resize', followPopovers);
+  window.addEventListener('scroll', followPopovers, true);
 
   document.addEventListener('click', function(e){
     if (!menu.hidden && !menu.contains(e.target)) closeMenu();
@@ -1191,7 +1317,7 @@ window.TrackerApp = function(){
     }
     return out;
   }
-  var STATUS_WORDS = {live:'live interview screening', lead:'in progress lead', wait:'awaiting', shut:'closed rejected'};
+  var STATUS_WORDS = {live:'live interview screening', lead:'in progress lead', wait:'awaiting', idea:'job lead saved not applied', shut:'closed rejected'};
   function hay(r, sel){
     if (!sel) return fold(r.textContent + ' ' + (STATUS_WORDS[r.getAttribute('data-s')] || ''));
     var cell = r.querySelector(sel);
@@ -1240,6 +1366,7 @@ window.TrackerApp = function(){
             && (!filters.type || r.getAttribute('data-type') === filters.type)
             && (!filters.cv   || r.getAttribute('data-cv')   === filters.cv)
             && (!filters.stale || r.getAttribute('data-stale') === '1')
+            && (!monthsOn().length || filters.months[monthOf(r)])
             && (!terms.length || matches(r, terms));
       r.classList.toggle('hide', !ok);
       if (ok) n++;
@@ -1252,10 +1379,12 @@ window.TrackerApp = function(){
       ? 'Nothing matches \u201c' + filters.q.trim() + '\u201d. Try fewer words, or clear the other filters.'
       : 'No applications match these filters.';
 
-    var any = filters.s || filters.date || filters.via || filters.type || filters.cv || filters.stale || filters.q;
+    drawMonthBtn();
+    var any = filters.s || filters.date || filters.via || filters.type || filters.cv || filters.stale
+           || filters.q || monthsOn().length;
     resetBtn.hidden = !any;
 
-    var counts = {live:0, lead:0, wait:0, shut:0};
+    var counts = {live:0, lead:0, wait:0, idea:0, shut:0};
     rows.forEach(function(r){ counts[r.getAttribute('data-s')]++; });
     stats.forEach(function(b){
       var f = b.getAttribute('data-f');
@@ -1293,9 +1422,83 @@ window.TrackerApp = function(){
   resetBtn.addEventListener('click', function(){
     filters.s = ''; filters.date = ''; filters.via = ''; filters.type = ''; filters.cv = '';
     filters.stale = false; filters.q = '';
+    filters.months = {}; saveMonths();
     if (qIn) qIn.value = '';
     apply();
   });
+
+  /* ---------- months ----------
+   * A row of ticks rather than a radio list: September and October together is
+   * the normal question ("what have I sent since the summer?"), not an edge
+   * case. The ticks are remembered per account, so they survive a reload and
+   * follow you to another device. */
+  var monBtn = document.getElementById('qf-months');
+  var monMenu = document.getElementById('mon-menu');
+
+  function drawMonthBtn(){
+    if (!monBtn) return;
+    var on = monthsOn().sort().reverse();
+    var lbl = monBtn.querySelector('.qf-mon-l');
+    if (lbl){
+      lbl.textContent = !on.length ? 'Months'
+        : on.length === 1 ? monthLabel(on[0])
+        : on.length + ' months';
+    }
+    monBtn.setAttribute('aria-pressed', String(!!on.length));
+  }
+
+  function drawMonthMenu(){
+    if (!monMenu) return;
+    monMenu.innerHTML = '';
+    var all = document.createElement('button');
+    all.type = 'button'; all.className = 'monbtn';
+    all.textContent = 'All months';
+    all.setAttribute('aria-pressed', String(!monthsOn().length));
+    all.addEventListener('click', function(){
+      filters.months = {}; saveMonths(); drawMonthMenu(); apply();
+    });
+    monMenu.appendChild(all);
+
+    monthsOnPage().forEach(function(k){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'monbtn';
+      b.textContent = monthLabel(k);
+      b.setAttribute('aria-pressed', String(!!filters.months[k]));
+      b.addEventListener('click', function(){
+        if (filters.months[k]) delete filters.months[k];
+        else filters.months[k] = true;
+        saveMonths(); drawMonthMenu(); apply();
+      });
+      monMenu.appendChild(b);
+    });
+  }
+
+  if (monBtn && monMenu){
+    monBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var open = monMenu.hidden;
+      drawMonthMenu();
+      monMenu.hidden = !open;
+      monBtn.setAttribute('aria-expanded', String(open));
+      if (open) placePanel(monMenu, monBtn);
+    });
+    document.addEventListener('click', function(e){
+      if (monMenu.hidden) return;
+      if (monMenu.contains(e.target) || monBtn.contains(e.target)) return;
+      monMenu.hidden = true;
+      monBtn.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  /* Ticks saved last time, kept only where the page still has that month. */
+  (function restoreMonths(){
+    var saved = savedMonths();
+    if (!saved || !saved.length) { drawMonthBtn(); return; }
+    var have = {};
+    monthsOnPage().forEach(function(k){ have[k] = 1; });
+    saved.forEach(function(k){ if (have[k]) filters.months[k] = true; });
+    drawMonthBtn();
+  })();
 
   /* ---------- insight carousel ---------- */
   var track = document.getElementById('ins-track');
