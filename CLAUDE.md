@@ -330,3 +330,19 @@ rather than sitting in one browser.
 viewport first, caps the panel to the screen and scrolls inside itself, so
 nothing can land where it cannot be reached. Scrolling and resizing move the
 panel with its button, and close it only once the button itself has gone.
+
+## What age does to a row
+
+`STALE_DAYS` (14) and `GONE_DAYS` (21), both at the top of app.js — declared
+there because `ageRules()` runs during the first paint, and a `var` further
+down would still be undefined.
+
+- 14 days with no reply: the row joins Needs chasing and raises one bell alert
+  saying what happens next. The `chased` flag on the row's saved state keeps it
+  to one, and `persist()` carries that flag through later saves.
+- 21 days: the row withdraws itself — status Withdrew, note "No reply in N days
+  — withdrawn automatically" — and says so in the bell.
+
+Both are marked manual, so a sweep asks before changing them back. The note is
+load-bearing: merge lets a real reply past an automatic withdrawal ("withdrawn
+automatically" in the note) but never past one the owner made by hand.

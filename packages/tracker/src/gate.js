@@ -483,6 +483,18 @@
     store.doc.alerts = out.slice(0, 60);
   }
 
+  /* The table raises its own alerts — a row aged into a chase, or withdrawn by
+   * the clock — and they belong in the same bell as a sweep's. */
+  root.TrackerAlerts = {
+    add: function (list) {
+      if (!list || !list.length || !store.doc) return;
+      recordAlerts(list);
+      store.touch();
+      drawBell();
+      paintDots();
+    }
+  };
+
   function markSeen(test) {
     var hit = false;
     alerts().forEach(function (a) { if (!a.seen && test(a)) { a.seen = true; hit = true; } });
@@ -572,12 +584,14 @@
     badge.hidden = !n;
     badge.textContent = n > 9 ? '9+' : String(n);
     document.getElementById('bell-btn').setAttribute('aria-label',
-      n ? n + ' update' + (n === 1 ? '' : 's') + ' from Gmail' : 'Updates from Gmail');
+      n ? n + ' update' + (n === 1 ? '' : 's') : 'Updates');
 
     var menu = document.getElementById('bell-menu');
     menu.innerHTML = '';
     var head = el('div', 'bell-head');
-    head.appendChild(el('span', '', 'Updates from Gmail'));
+    /* Not all of these come from Gmail any more — a row can age into a chase
+     * or withdraw itself while the mailbox stays quiet. */
+    head.appendChild(el('span', '', 'Updates'));
     if (n) {
       var clear = el('button', 'bell-clear', 'Mark all read');
       clear.type = 'button';
@@ -588,7 +602,7 @@
 
     var list = alerts();
     if (!list.length) {
-      menu.appendChild(el('div', 'bell-empty', 'Nothing yet. Refresh from Gmail and anything it changes shows up here.'));
+      menu.appendChild(el('div', 'bell-empty', 'Nothing yet. Anything a refresh changes, or a row left waiting too long, shows up here.'));
       return;
     }
     list.forEach(function (a) {

@@ -10,6 +10,13 @@ window.TrackerApp = function(){
   var stats = Array.prototype.slice.call(document.querySelectorAll('.tstat'));
   var STATUS_LABEL = {live:'Live', lead:'In progress', wait:'Awaiting', idea:'Job lead', shut:'Closed out'};
   var filters = {s:'', date:'', via:'', type:'', cv:'', stale:false, q:'', months:{}};
+
+  /* Declared up here, not beside the code that uses them: the first pass over
+   * the rows runs while the file is still being read, and a `var` further down
+   * would still be undefined — which quietly turned "withdraws at 21" into
+   * "withdraws at undefined" and let every threshold through. */
+  var STALE_DAYS = 14;    /* no reply for this long: worth chasing */
+  var GONE_DAYS = 21;     /* and this long: the row withdraws itself */
   var sortKey = 'applied', sortDir = 'desc';
 
   function uniq(attr){
@@ -101,6 +108,7 @@ window.TrackerApp = function(){
   function persist(tr){
     var id = tr.getAttribute('data-id');
     if (!id) return;
+    var prev = STATE[id] || {};
     STATE[id] = {
       s: tr.getAttribute('data-s'),
       label: tr.querySelector('.pill').textContent.trim(),
@@ -118,6 +126,10 @@ window.TrackerApp = function(){
       cl: tr.getAttribute('data-cl') || '',
       jd: tr.getAttribute('data-jd') || '',
       link: tr.getAttribute('data-link') || '',
+      /* set by the age rules below; a later persist must not lose them or the
+       * same row is chased again every time the page is opened */
+      chased: prev.chased,
+      auto: prev.auto,
       star: tr.getAttribute('data-star') === '1'
     };
     writeStore(STATE);
@@ -289,7 +301,7 @@ window.TrackerApp = function(){
   });
 
   /* ---------- manual status editing (session only) ---------- */
-  var RANKJS = {live:0, lead:1, wait:2, shut:3};
+  var RANKJS = {live:0, lead:1, wait:2, idea:3, shut:4};
   var STATUS_OPTIONS = [
     ['live', 'Interview'], ['live', 'Screening'],
     ['lead', 'In progress'],
@@ -662,6 +674,9 @@ window.TrackerApp = function(){
     refreshFacets();
   }
   restoreSaved();
+  /* Declared below with the other age rules; hoisted, so it runs here on the
+   * first paint as well as after every reload. */
+  ageRules();
 
   /* Swap in a new set of rows without a page reload — which matters because
    * the Google token lives in memory, and reloading would sign you out. All
@@ -670,6 +685,7 @@ window.TrackerApp = function(){
     window.Render.rows(list);
     rows = Array.prototype.slice.call(tb.querySelectorAll('tr'));
     restoreSaved();
+    ageRules();
     apply();
     setSort(sortKey, sortDir);
     renderStarred();
@@ -1244,7 +1260,6 @@ window.TrackerApp = function(){
   /* How long since anything happened on a row. Derived from the dates already
    * on it — nothing extra is stored — and only meaningful for something still
    * open: a lead was never applied to, and a closed one is finished. */
-  var STALE_DAYS = 14;
 
   function daysSince(sortNum){
     var v = String(sortNum || '');
@@ -1290,6 +1305,57 @@ window.TrackerApp = function(){
       if (!n && filters.stale){ filters.stale = false; }
     }
     return n;
+  }
+
+  /* ---------- what age does to a row ----------
+   * Fourteen days with no reply and the row is worth chasing — it says so in
+   * the bell, once, and says what happens next. Twenty-one and the employer
+   * has answered by not answering: the row withdraws itself, with the reason
+   * written into the note so it never looks like something you did.
+   *
+   * Both are marked as deliberate, so a sweep asks before changing them back,
+   * and the note keeps the door open: merge lets a real reply past an
+   * automatic withdrawal, just not past one of yours.
+   */
+  function ageOf(tr){
+    return daysSince(Number(tr.getAttribute('data-updated')) || Number(tr.getAttribute('data-applied')));
+  }
+
+  function alertFor(tr, what){
+    return { key: mergeKeyOf(tr), id: tr.getAttribute('data-id'),
+             company: coOf(tr), role: roleOf(tr), what: what,
+             at: new Date().toISOString(), seen: false };
+  }
+
+  function ageRules(){
+    var fresh = [];
+    rows.forEach(function(tr){
+      var st = tr.getAttribute('data-s');
+      if (st !== 'live' && st !== 'wait') return;
+      var age = ageOf(tr);
+      if (age < STALE_DAYS) return;
+      var id = tr.getAttribute('data-id');
+      var was = STATE[id] || {};
+
+      if (age >= GONE_DAYS){
+        markManual(tr, ['status', 'chip', 'note']);
+        setStatusQuiet(tr, 'shut', 'Withdrew');
+        setRole(tr, roleOf(tr), 'No reply in ' + age + ' days \u2014 withdrawn automatically');
+        persist(tr);
+        STATE[id].auto = 'withdrew';
+        writeStore(STATE);
+        fresh.push(alertFor(tr, 'Withdrew \u2014 ' + age + ' days, no reply'));
+        return;
+      }
+
+      if (was.chased) return;
+      persist(tr);
+      STATE[id].chased = true;
+      writeStore(STATE);
+      fresh.push(alertFor(tr, 'Chase \u2014 ' + age + ' days, withdraws at ' + GONE_DAYS));
+    });
+    if (fresh.length && window.TrackerAlerts && window.TrackerAlerts.add) window.TrackerAlerts.add(fresh);
+    return fresh.length;
   }
 
   /* ---------- search ----------
