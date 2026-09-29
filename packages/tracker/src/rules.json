@@ -5,6 +5,8 @@
     "indeedemail.com": "Indeed",
     "linkedin.com": "LinkedIn",
     "jobserve.com": "JobServe",
+    "jobleads.com": "JobLeads",
+    "jobs.jobleads.com": "JobLeads",
     "welcometothejungle.com": "Welcome to the Jungle",
     "otta.com": "Welcome to the Jungle",
     "adzuna.co.uk": "Adzuna ApplyIQ",
@@ -272,6 +274,11 @@
     "talent interview",
     "an interview"
   ],
+  "_neverComment": "Exact sender addresses that are never an application, however they read. Kept deliberately short: blocking a whole domain has lost real confirmations before, so only addresses the owner has seen come back again and again belong here.",
+  "neverSenders": [
+    "new.style.jobseekers.allowance@notifications.service.gov.uk",
+    "support@vinhgiang.com"
+  ],
   "_boardComment": "Your JOBS/* labels say where you found a job, even when the email comes from the employer's tracker. A thread carrying one of these labels is shown as board → tracker (WTTJ → Workable). Labels only decorate the source; they never decide whether a thread is kept. A source already showing an arrow is left alone.",
   "boardLabels": {
     "JOBS/WTTJ": "WTTJ",
@@ -279,6 +286,7 @@
     "JOBS/Indeed": "Indeed",
     "JOBS/Reed": "Reed",
     "JOBS/JobServe": "JobServe",
+    "JOBS/JobLeads": "JobLeads",
     "JOBS/CW Jobs": "CW Jobs",
     "JOBS/Adzuna (ApplyIQ)": "Adzuna ApplyIQ",
     "JOBS/Jobgether": "Jobgether",

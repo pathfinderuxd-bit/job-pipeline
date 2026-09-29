@@ -41,6 +41,16 @@
    * is hiring". Blocking senders lost real confirmations three separate times.
    * This is a cheap first pass over unambiguous digest wording; the decision
    * that matters is made further down, having read the thread. */
+  /* The one exception to the paragraph above: exact addresses, listed by the
+   * owner, that have come back every sweep and are never an application. An
+   * address, never a domain — a domain would take real confirmations with it. */
+  function neverSender(msg, rules) {
+    var from = String((msg && msg.sender) || '').toLowerCase();
+    return (rules.neverSenders || []).some(function (a) {
+      return a && from.indexOf(String(a).toLowerCase()) > -1;
+    });
+  }
+
   function isNoise(msg, rules) {
     var subject = String(msg.subject || '').toLowerCase();
     return (rules.ignoreSubjects || []).some(function (s) { return s && subject.indexOf(String(s).toLowerCase()) > -1; });
@@ -245,6 +255,7 @@
     var first = ordered[0];
     lastWhy = '';
     if (!first) return drop('empty thread');
+    if (neverSender(first, rules)) return drop('sender is on your never list');
 
     /* The owner's own lists, weighed rather than ranked. Subject and body both
      * count, the subject three times as much: a list word in the subject is
@@ -344,7 +355,7 @@
   }
 
   var API = {
-    domainOf: domainOf, sourceFor: sourceFor, isNoise: isNoise,
+    domainOf: domainOf, sourceFor: sourceFor, isNoise: isNoise, neverSender: neverSender,
     companyFromSender: companyFromSender,
     tidyName: tidyName, roleFromBody: roleFromBody,
     companyFromBody: companyFromBody, companyFromDomain: companyFromDomain,

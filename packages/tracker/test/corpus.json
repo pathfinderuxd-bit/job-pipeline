@@ -345,6 +345,20 @@
       "sender": "noreply@candidates.workablemail.com",
       "subject": "Complete our anonymous survey",
       "body": "Hi Rich, thank you for your application to Fenwick Health. We would love your feedback on the process — it takes two minutes."
+    },
+    {
+      "want": "none",
+      "why": "benefits mail from the never list, however application-shaped it reads",
+      "sender": "new.style.jobseekers.allowance@notifications.service.gov.uk",
+      "subject": "Important Applicant Information: New Style Jobseeker's Allowance",
+      "body": "We have received your application. Your claim is being processed and we will contact you about your interview."
+    },
+    {
+      "want": "none",
+      "why": "newsletter from the never list",
+      "sender": "Vinh Giang <support@vinhgiang.com>",
+      "subject": "[V] I hate giraffes",
+      "body": "Hi Rich, a short story about presence and why your application of it matters."
     }
   ]
 }
