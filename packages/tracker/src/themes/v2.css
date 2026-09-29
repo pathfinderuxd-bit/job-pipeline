@@ -1635,3 +1635,20 @@ tr[data-s="idea"] .pill{border-color:var(--idea-line);background:var(--idea-soft
   .tally .tstat{padding:14px 14px}
   .tally .tic{width:32px;height:32px}
 }
+
+
+/* ---- v1.11.2 — the advert link in the Live and Starred lists ----------
+ * Same behaviour as the table's role cell, in the brand yellow these lists
+ * use for anything you can press. The wrapper is the existing .rl slot, so
+ * the layout does not move. */
+.live-list .rl,#starlist .rl{display:inline-flex;align-items:baseline;gap:6px;min-width:0}
+.live-list .rl .rolet,#starlist .rl .rolet{
+  font:inherit;color:var(--ink-2);background:none;border:0;padding:0;cursor:pointer;
+  text-align:left;text-decoration:underline dotted;text-underline-offset:3px;
+  text-decoration-color:var(--ink-3);overflow-wrap:anywhere;
+}
+.live-list .rl .rolet:hover,#starlist .rl .rolet:hover{color:var(--brand);text-decoration-color:var(--brand)}
+.live-list .rl .rolet.has-link,#starlist .rl .rolet.has-link{
+  color:var(--brand);text-decoration-color:var(--brand);
+}
+.live-list .rl .linkbtn,#starlist .rl .linkbtn{flex:0 0 auto}

@@ -238,7 +238,7 @@ var RANK = { live: 0, lead: 1, wait: 2, idea: 3, shut: 4 };
     renderInsights(list, site || {});
   }
 
-  root.Render = { all: all, rows: renderRows, rowHtml: rowHtml, roleCell: roleCell, idOf: idOf,
+  root.Render = { all: all, rows: renderRows, rowHtml: rowHtml, roleCell: roleCell, LINK_SVG: LINK_SVG, idOf: idOf,
                   initial: initial, build: renderBuild, when: niceWhen,
                   mast: renderMast, insights: renderInsights, counts: counts };
 

@@ -162,7 +162,7 @@ window.TrackerApp = function(){
       st.className = 'listar';
       st.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.7 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.7l-5.1 2.7.97-5.68L3.75 9.7l5.7-.83z"/></svg>';
       var co = document.createElement('span'); co.className = 'co'; co.textContent = coOf(r);
-      var rl = document.createElement('span'); rl.className = 'rl'; rl.textContent = roleOf(r);
+      var rl = roleBit(r);
       var nx = document.createElement('span'); nx.className = 'nx';
       var label = r.querySelector('.pill').textContent.trim();
       nx.textContent = note ? (label + ' \u00b7 ' + note) : label;
@@ -222,6 +222,8 @@ window.TrackerApp = function(){
     tr.setAttribute('data-link', href);
     setRole(tr, roleOf(tr), noteOf(tr), href);
     persist(tr);
+    renderLive();
+    renderStarred();
   }
 
   function openLink(tr){
@@ -351,6 +353,39 @@ window.TrackerApp = function(){
     return n ? n.textContent.trim() : '';
   }
 
+  /* The role in these two lists behaves like the role in the table: with a
+   * link saved it opens the advert, without one the plus asks for it. Built
+   * once here so the two lists cannot drift apart from each other or from the
+   * table. The row itself is the source of truth, so the buttons carry the
+   * row's id rather than a copy of its data. */
+  function roleBit(r){
+    var link = r.getAttribute('data-link') || '';
+    var wrap = document.createElement('span');
+    wrap.className = 'rl';
+
+    var t = document.createElement('button');
+    t.type = 'button';
+    t.className = 'rolet' + (link ? ' has-link' : '');
+    t.textContent = roleOf(r);
+    t.title = link ? 'Open the job advert' : 'Add a link to the job advert';
+    t.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (link) window.open(link, '_blank', 'noopener');
+      else openLink(r);
+    });
+
+    var add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'linkbtn';
+    add.innerHTML = link ? window.Render.LINK_SVG : '+';
+    add.title = link ? 'Change the job link' : 'Add the job link';
+    add.setAttribute('aria-label', add.title);
+    add.addEventListener('click', function(e){ e.stopPropagation(); openLink(r); });
+
+    wrap.appendChild(t); wrap.appendChild(add);
+    return wrap;
+  }
+
   function renderLive(){
     var ul = document.querySelector('.live-list');
     if (!ul) return;
@@ -370,8 +405,7 @@ window.TrackerApp = function(){
       var dot = document.createElement('span'); dot.className = 'dot dot-live';
       var co = document.createElement('span'); co.className = 'co';
       co.textContent = coOf(r);
-      var rl = document.createElement('span'); rl.className = 'rl';
-      rl.textContent = roleOf(r);
+      var rl = roleBit(r);
       var nx = document.createElement('span'); nx.className = 'nx';
       nx.textContent = note ? (label + ' · ' + note) : label;
       li.appendChild(dot); li.appendChild(co); li.appendChild(rl); li.appendChild(nx);
