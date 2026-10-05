@@ -719,6 +719,10 @@ window.TrackerApp = function(){
   /* Swap in a new set of rows without a page reload — which matters because
    * the Google token lives in memory, and reloading would sign you out. All
    * the row handlers are delegated from the table, so they survive this. */
+  /* Redraw the cards and the masthead line from the rows on the page. The
+   * Drive save calls this, so the numbers are re-read after every save. */
+  window.TrackerApp.recount = function(){ apply(); };
+
   window.TrackerApp.reload = function(list){
     window.Render.rows(list);
     rows = Array.prototype.slice.call(tb.querySelectorAll('tr'));
@@ -1630,29 +1634,27 @@ window.TrackerApp = function(){
            || filters.q || monthsOn().length;
     resetBtn.hidden = !any;
 
-    /* How many applications the stored file holds, leads aside. */
-    var kept = 0;
-    if (window.Tracker && window.Tracker.applications){
-      (window.Tracker.applications() || []).forEach(function(a){ if (a && a.status !== 'idea') kept++; });
-    }
-
     var counts = {live:0, lead:0, wait:0, idea:0, shut:0};
     rows.forEach(function(r){ counts[r.getAttribute('data-s')]++; });
+    /* One definition, used by the card and the masthead line: live is every
+     * application still going (live + in progress + awaiting); the total is
+     * every application, open or closed. Leads are not applications. */
+    var open = counts.live + counts.lead + counts.wait;
+    var total = rows.length - counts.idea;
     stats.forEach(function(b){
       var f = b.getAttribute('data-f');
       var num = b.querySelector('b');
-      /* A lead is not an application, so the total is every row bar those.
-       * The page can hold fewer rows than the file does: deleting a row takes
-       * it off the table but leaves it in the data, which is why the masthead
-       * could say 97 while this card said 71. Show both rather than pick one. */
       if (num){
         if (f !== 'all') num.textContent = counts[f];
         else {
-          var here = rows.length - counts.idea;
-          num.textContent = (kept > here) ? (here + '/' + kept) : String(here);
+          num.textContent = open + '/' + total;
+          var lab = num.nextElementSibling;
+          if (lab) lab.textContent = 'Live / total applications';
         }
       }
     });
+    var sf = document.getElementById('mast-standfirst');
+    if (sf) sf.textContent = total + ' applications, ' + open + ' live, ' + counts.wait + ' awaiting a reply.';
     renderLive();
     renderStarred();
 

@@ -112,7 +112,14 @@
         if (pick) { cur = pick; key = keyOf(cur); }
       }
 
-      if (!cur) { report.added.push(inc); return; }
+      /* Two emails about one job in the same sweep (one board sent six) must land
+       * as one new row, not six. */
+      if (!cur) {
+        var seen = report.added.filter(function (r) { return keyOf(r) === key; })[0];
+        if (!seen) { report.added.push(inc); return; }
+        if (recency(inc) > recency(seen)) report.added[report.added.indexOf(seen)] = inc;
+        return;
+      }
 
       var fields = [];
       SWEEP_FIELDS.forEach(function (f) {
@@ -233,7 +240,7 @@
       return (Number(b.appliedSort) || 0) - (Number(a.appliedSort) || 0);
     });
 
-    return { rows: out, applied: applied };
+    return { rows: collapse(out), applied: applied };
   }
 
   /* Split additions into the ones worth trusting and the ones that could not
@@ -260,7 +267,44 @@
     return bits.join(', ');
   }
 
-  var API = { keyOf: keyOf, roleStem: roleStem, diff: diff, apply: apply,
+  /* One row per job. The same company and role twice is the same application
+   * counted twice — it skews every total and the Analyse percentages — so the
+   * copies fold into one: the newest state wins, the oldest applied date
+   * stays, and anything the person set (star, CV, letter, link) is kept. */
+  var RANK = { idea: 0, lead: 1, wait: 2, live: 3, shut: 4 };
+  function collapse(rows) {
+    var by = {}, order = [];
+    (rows || []).forEach(function (r) {
+      var co = slug(r.company);
+      if (!co || co === slug('(unknown employer)')) { order.push(r); return; }
+      var k = keyOf(r);
+      if (!by[k]) { by[k] = [r]; order.push(k); } else by[k].push(r);
+    });
+    return order.map(function (o) {
+      if (typeof o !== 'string') return o;
+      var g = by[o];
+      if (g.length === 1) return g[0];
+      var win = g.reduce(function (a, b) {
+        var d = recency(b) - recency(a);
+        if (d !== 0) return d > 0 ? b : a;
+        return (RANK[b.status] || 0) > (RANK[a.status] || 0) ? b : a;
+      });
+      var out = {};
+      Object.keys(win).forEach(function (f) { out[f] = win[f]; });
+      g.forEach(function (r) {
+        Object.keys(r).forEach(function (f) {
+          if (isBlank(out[f]) && !isBlank(r[f])) out[f] = r[f];
+        });
+        var s = Number(r.appliedSort || 0);
+        if (s && (!Number(out.appliedSort) || s < Number(out.appliedSort))) {
+          out.appliedSort = s; out.applied = r.applied;
+        }
+      });
+      return out;
+    });
+  }
+
+  var API = { keyOf: keyOf, collapse: collapse, roleStem: roleStem, diff: diff, apply: apply,
               partitionAdded: partitionAdded,
               summarise: summarise, SWEEP_FIELDS: SWEEP_FIELDS, MINE_ONLY: MINE_ONLY };
 

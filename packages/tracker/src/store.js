@@ -104,10 +104,22 @@
   };
 
   /* The application list. Null until a baseline is chosen or a sweep lands. */
-  Store.prototype.applications = function () { return this.doc.applications; };
+  function collapseList(list) {
+    var M = (typeof window !== 'undefined' && window.Merge) || (typeof globalThis !== 'undefined' && globalThis.Merge);
+    return (M && M.collapse && list) ? M.collapse(list) : list;
+  }
+  /* Copies of one job that arrived in an older file fold away on first read. */
+  Store.prototype.applications = function () {
+    var l = this.doc.applications;
+    if (l && l.length) {
+      var c = collapseList(l);
+      if (c.length !== l.length) this.doc.applications = c;
+    }
+    return this.doc.applications;
+  };
 
   Store.prototype.setApplications = function (list, baselineId) {
-    this.doc.applications = list;
+    this.doc.applications = collapseList(list);
     if (baselineId !== undefined) this.doc.baseline = baselineId;
     this.touch();
   };

@@ -283,6 +283,7 @@
     if (state === 'saving') {
       saveToast = toast({ id: 'drive', text: 'Saving to Google Drive…', tone: 'busy', timeout: 0 });
     } else if (state === 'saved') {
+      if (root.TrackerApp && root.TrackerApp.recount) root.TrackerApp.recount();
       saveToast = toast({ id: 'drive', text: 'Saved to Google Drive', tone: 'good', timeout: 2200 });
     } else if (state === 'error') {
       /* "Could not save" on its own sent people looking for a bug in the page.
@@ -453,8 +454,25 @@
      * couple of seconds since the last save. */
     window.addEventListener('pagehide', function () { store.flush(); });
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'hidden') store.flush();
+      if (document.visibilityState === 'hidden') { store.flush(); return; }
+      refetch();
     });
+
+    /* Coming back to the tab pulls the Drive copy again, so an edit made on
+     * another device shows up here without a reload. Skipped while this tab
+     * has unsaved work — the save goes first and the newer copy wins. */
+    var refetching = false;
+    function refetch() {
+      if (refetching || !store.drive || store.dirty || store.saving) return;
+      refetching = true;
+      store.syncFromDrive().then(function (res) {
+        if (res && res.used === 'remote') {
+          root.TrackerApp.reload(adopt((store.applications() || []).slice(), store.rows()));
+          drawBell(); paintDots();
+          toast({ text: 'Updated from Google Drive', tone: 'good', timeout: 3000 });
+        }
+      }).catch(function () {}).then(function () { refetching = false; });
+    }
   }
 
   /* --------------------------------------------------------------- alerts --
@@ -1095,8 +1113,13 @@
                   'updated ' + (merged.applied.changed + merged.applied.conflicts)];
       if (refused) said.push(refused + ' will not be offered again');
       if (back) said.push(back + ' taken back');
-      toast({ text: said.join(', '), tone: 'good' });
       root.TrackerApp.reload(store.applications());
+      /* Say what landed and what the page now shows, so a refresh that did
+       * nothing visible is distinguishable from one that did. */
+      var nowRows = (store.applications() || []).filter(function (a) { return a.status !== 'idea'; });
+      var nowOpen = nowRows.filter(function (a) { return a.status !== 'shut'; }).length;
+      toast({ text: 'Applied \u2014 ' + said.join(', ') + '. Now ' + nowOpen + ' live / ' + nowRows.length + ' total.',
+              tone: 'good', timeout: 7000 });
       drawBell();
       paintDots();
       /* The masthead's timestamp is about the rows, so applying a refresh has
