@@ -108,6 +108,7 @@
       <button type="button" class="addbtn" id="addrow">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add
       </button>
+      <button type="button" class="qf qf-an" id="analysebtn" aria-label="Analyse the applications"><span class="an-l">Analyse</span><span class="an-i" aria-hidden="true">&#128200;</span></button>
       <button type="button" class="reset" id="resetall" hidden>Clear filters</button>
       <button type="button" class="reset" id="resetcols" hidden>Reset columns</button>
       <button type="button" class="colsbtn" id="colsbtn" aria-haspopup="true" aria-expanded="false">Columns</button>
@@ -135,6 +136,26 @@
       </table>
       <div class="empty" id="emptymsg" hidden>No applications match these filters.</div>
     </div>
+  </section>
+
+  <section class="analyse" id="analyse" hidden aria-label="Analysis">
+    <button type="button" class="an-back" id="an-back">&larr; Back to jobs</button>
+    <p class="an-eyebrow">Job pipeline &middot; analysis</p>
+    <h2 class="an-h1">Where the applications go</h2>
+    <p class="an-sub" id="an-sub"></p>
+
+    <div class="an-tiles" id="an-tiles"></div>
+
+    <h3 class="an-h2">What you apply for</h3>
+    <p class="an-note">Every application, by the kind of role.</p>
+    <div class="an-stack" id="an-stack"></div>
+    <div class="an-key" id="an-key"></div>
+
+    <div class="an-cats" id="an-cats"></div>
+
+    <h3 class="an-h2">Rejected and not shortlisted</h3>
+    <p class="an-note" id="an-knock-note"></p>
+    <div class="an-card"><div id="an-knock"></div></div>
   </section>
 
   <section class="insights">

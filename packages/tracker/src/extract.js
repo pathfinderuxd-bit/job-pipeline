@@ -51,6 +51,17 @@
     });
   }
 
+  /* Does any message in the thread carry one of the owner's alert labels? */
+  function labelHit(messages, rules) {
+    var want = (rules.excludeLabels || []).map(function (l) { return String(l).toLowerCase(); });
+    if (!want.length) return false;
+    return (messages || []).some(function (m) {
+      return (m.labelNames || []).some(function (n) {
+        return want.indexOf(String(n).toLowerCase()) > -1;
+      });
+    });
+  }
+
   function isNoise(msg, rules) {
     var subject = String(msg.subject || '').toLowerCase();
     return (rules.ignoreSubjects || []).some(function (s) { return s && subject.indexOf(String(s).toLowerCase()) > -1; });
@@ -268,7 +279,11 @@
     var wb = listHit(rules.whitelist, all) ? 1 : 0;
     var bs = (listHit(rules.blacklist, first.subject) || isNoise(first, rules)) ? 1 : 0;
     var bb = listHit(rules.blacklist, all) ? 1 : 0;
-    var score = 3 * ws + wb - 3 * bs - bb;
+    /* A label the owner marked as alerts counts against the thread, but only
+     * by one: his filters put "Job Alerts" on real confirmations as well, so
+     * it is evidence, not a verdict. */
+    var bl = labelHit(ordered, rules) ? 1 : 0;
+    var score = 3 * ws + wb - 3 * bs - bb - bl;
     if (score < 0) return drop(bs ? 'subject looks like an alert or digest' : 'body reads like an alert or digest');
     var white = !!(ws || wb);
 
@@ -355,7 +370,7 @@
   }
 
   var API = {
-    domainOf: domainOf, sourceFor: sourceFor, isNoise: isNoise, neverSender: neverSender,
+    domainOf: domainOf, sourceFor: sourceFor, isNoise: isNoise, neverSender: neverSender, labelHit: labelHit,
     companyFromSender: companyFromSender,
     tidyName: tidyName, roleFromBody: roleFromBody,
     companyFromBody: companyFromBody, companyFromDomain: companyFromDomain,

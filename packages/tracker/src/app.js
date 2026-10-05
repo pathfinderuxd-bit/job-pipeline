@@ -1392,6 +1392,148 @@ window.TrackerApp = function(){
     return fresh.length;
   }
 
+  /* ---------- analysis ----------
+   * One question: what am I actually applying for, and where does it end?
+   * The grouping is read off the role text rather than tagged by hand, so it
+   * keeps itself right as rows arrive. A withdrawal is not a knock-back —
+   * most of them are the 21-day rule — so the two are counted apart.
+   */
+  function esc(t){
+    return String(t == null ? '' : t)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  var GROUPS = [
+    { key:'lead',   name:'Lead designer',             color:'var(--lead)' },
+    { key:'senior', name:'Senior designer',           color:'var(--brand)' },
+    { key:'head',   name:'Head / Manager',            color:'var(--idea)' },
+    { key:'mid',    name:'Mid level designer & misc', color:'var(--ink-3)' }
+  ];
+
+  function groupOf(tr){
+    var r = roleOf(tr).toLowerCase();
+    if (!/design|ux|ui|product/.test(r)) return 'mid';
+    if (/head of|director|design manager|design systems? manager/.test(r)) return 'head';
+    if (/\bmanager\b/.test(r)) return 'mid';
+    if (/\blead\b|principal/.test(r)) return 'lead';
+    if (/senior|snr|sr\./.test(r)) return 'senior';
+    return 'mid';
+  }
+
+  /* Shut by the employer, rather than by you or by the clock. */
+  function knockedBack(tr){
+    var chip = (tr.querySelector('.pill').textContent || '').trim().toLowerCase();
+    return tr.getAttribute('data-s') === 'shut' && !/withdr/.test(chip);
+  }
+
+  function pct(n, of){ return of ? Math.round(n / of * 100) : 0; }
+
+  function drawAnalysis(){
+    var sec = document.getElementById('analyse');
+    if (!sec) return;
+    var all = rows.filter(function(r){ return r.getAttribute('data-s') !== 'idea'; });
+    var total = all.length;
+
+    var open = all.filter(function(r){ return /live|wait|lead/.test(r.getAttribute('data-s')); }).length;
+    var knock = all.filter(knockedBack);
+    var withdrew = all.filter(function(r){
+      return r.getAttribute('data-s') === 'shut' && /withdr/i.test(r.querySelector('.pill').textContent);
+    }).length;
+
+    document.getElementById('an-sub').textContent =
+      total + ' applications, grouped by the kind of role. Percentages are of everything applied for; ' +
+      'the knock-back rate is within each group.';
+
+    var tiles = [
+      ['', total, 'Applications'],
+      ['t-live', open, 'Still open'],
+      ['t-shut', knock.length, 'Rejected or not shortlisted'],
+      ['t-wd', withdrew, 'Withdrawn']
+    ];
+    document.getElementById('an-tiles').innerHTML = tiles.map(function(t){
+      return '<div class="an-tile ' + t[0] + '"><b>' + t[1] + '</b><span>' + t[2] + '</span></div>';
+    }).join('');
+
+    var counts = {}, knocks = {};
+    GROUPS.forEach(function(g){ counts[g.key] = 0; knocks[g.key] = 0; });
+    all.forEach(function(r){
+      var k = groupOf(r);
+      counts[k]++;
+      if (knockedBack(r)) knocks[k]++;
+    });
+
+    var order = GROUPS.slice().sort(function(a, b){ return counts[b.key] - counts[a.key]; });
+
+    document.getElementById('an-stack').innerHTML = GROUPS.map(function(g){
+      return '<i style="width:' + pct(counts[g.key], total) + '%;background:' + g.color + '"></i>';
+    }).join('');
+
+    document.getElementById('an-key').innerHTML = GROUPS.map(function(g){
+      return '<span><em style="background:' + g.color + '"></em>' + esc(g.name) + ' ' +
+             pct(counts[g.key], total) + '%</span>';
+    }).join('');
+
+    document.getElementById('an-cats').innerHTML = order.map(function(g){
+      var n = counts[g.key], k = knocks[g.key];
+      return '<div class="an-cat">' +
+        '<div><h4><em style="background:' + g.color + '"></em>' + esc(g.name) + '</h4>' +
+        '<div class="an-bar"><i style="width:' + pct(n, total) + '%;background:' + g.color + '"></i></div></div>' +
+        '<div class="an-num"><b>' + n + '</b><span>' + pct(n, total) + '% of all</span></div>' +
+        '<div class="an-knock"><b>' + pct(k, n) + '%</b><span>' + k + ' knocked back</span></div>' +
+        '</div>';
+    }).join('');
+
+    knock.sort(function(a, b){
+      return (Number(b.getAttribute('data-updated')) || Number(b.getAttribute('data-applied')) || 0) -
+             (Number(a.getAttribute('data-updated')) || Number(a.getAttribute('data-applied')) || 0);
+    });
+    document.getElementById('an-knock-note').textContent = knock.length
+      ? knock.length + ' applications, newest first.'
+      : 'Nothing has come back as a no yet.';
+    document.getElementById('an-knock').innerHTML = knock.map(function(r){
+      var upd = updShownOf(r) || r.getAttribute('data-date') || '';
+      return '<div class="an-row">' +
+        '<span class="an-co">' + esc(coOf(r)) + '</span>' +
+        '<span class="an-role">' + esc(roleOf(r)) + '</span>' +
+        '<span class="an-pill">' + esc(r.querySelector('.pill').textContent.trim()) + '</span>' +
+        '<span class="an-when">' + esc(upd) + '</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  function showAnalysis(on){
+    var sec = document.getElementById('analyse');
+    var btn = document.getElementById('analysebtn');
+    if (!sec) return;
+    if (on) drawAnalysis();
+    sec.hidden = !on;
+    /* Everything else steps aside — this is a view, not a panel. The sections
+     * are siblings inside the page wrapper (which the build adds), so walk the
+     * parent rather than assuming they hang off <body>. Each one's own hidden
+     * state is remembered, so Starred does not reappear on the way back. */
+    Array.prototype.forEach.call(sec.parentNode.children, function(el){
+      if (el === sec || el.tagName === 'HEADER') return;
+      if (on){
+        if (el.dataset.anWas === undefined) el.dataset.anWas = el.hidden ? '1' : '0';
+        el.hidden = true;
+      } else if (el.dataset.anWas !== undefined){
+        el.hidden = el.dataset.anWas === '1';
+        delete el.dataset.anWas;
+      }
+    });
+    /* .tally sets its own display, which beats the hidden attribute, and the
+     * masthead copy belongs to the jobs page rather than to this view. */
+    document.body.classList.toggle('an-on', !!on);
+    if (btn) btn.setAttribute('aria-pressed', String(!!on));
+    window.scrollTo(0, 0);
+  }
+
+  var anBtn = document.getElementById('analysebtn');
+  if (anBtn) anBtn.addEventListener('click', function(){ showAnalysis(true); });
+  var anBack = document.getElementById('an-back');
+  if (anBack) anBack.addEventListener('click', function(){ showAnalysis(false); });
+
   /* ---------- search ----------
    * Every word has to match, anywhere in the row, in any case and ignoring
    * accents. "Quoted words" match as a phrase. A leading minus excludes.

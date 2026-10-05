@@ -236,6 +236,7 @@
           return {
             threadId: id,
             labels: m.labelIds || [],
+            labelNames: (m.labelIds || []).map(function (id) { return labelName[id] || ''; }),
             sender: header(h, 'from'),
             subject: header(h, 'subject'),
             date: new Date(Number(m.internalDate)),
@@ -301,10 +302,13 @@
         return wanted.filter(function (l) { return have[l.toLowerCase()]; });
       }, function () { return []; });
       return check.then(function (present) {
-        var not = present.map(function (l) {
-          return ' -label:"' + l.replace(/"/g, '').replace(/\s+/g, '-') + '"';
-        }).join('');
-        base = 'after:' + after + ' in:anywhere' + not + ' ';
+        /* These labels used to be cut out of the query itself. They cannot be:
+         * a filter puts "Job Alerts" on genuine confirmations too — 4,500-odd
+         * messages here — and the sweep never even saw them. They are handed
+         * to the gate as a mild negative instead, so a digest still fails on
+         * its own wording while a real "thanks for applying" gets through. */
+        void present;        /* the gate reads the names off each message */
+        base = 'after:' + after + ' in:anywhere ';
 
         /* Pass one: find applications — the wording, the boards and trackers
          * they come from, and your star. The gate in extract.js has the final

@@ -346,3 +346,27 @@ down would still be undefined.
 Both are marked manual, so a sweep asks before changing them back. The note is
 load-bearing: merge lets a real reply past an automatic withdrawal ("withdrawn
 automatically" in the note) but never past one the owner made by hand.
+
+## The Analyse view
+
+A second view on the same rows, not a page: the Analyse button at the end of
+the filter row hides the other sections (remembering which were already
+hidden) and shows `#analyse`; "Back to jobs" puts them back. `body.an-on`
+takes care of the two that set their own display — the tally and the masthead
+copy.
+
+Grouping is read off the role text in `groupOf()`, never tagged by hand, so it
+stays right as rows arrive: Head / Manager, Lead designer, Senior designer, and
+Mid level designer & misc for everything else (including non-design roles).
+`knockedBack()` counts only rows the employer shut — a Withdrew row is the
+owner's doing or the 21-day rule, and flattering the numbers with it would be
+the whole point missed.
+
+## The Job Alerts label
+
+Rich's filters put "Job Alerts" on genuine ATS confirmations as well as on
+digests — 4,500-odd messages. It used to be cut out of the Gmail query, so the
+sweep never saw those confirmations at all. Now the query carries no label
+exclusion: every message brings its label names down with it, and `labelHit()`
+scores an excluded label as a single point against the thread. A digest still
+fails on its own wording; "thanks for applying" still gets through.
