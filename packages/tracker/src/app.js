@@ -1626,13 +1626,28 @@ window.TrackerApp = function(){
            || filters.q || monthsOn().length;
     resetBtn.hidden = !any;
 
+    /* How many applications the stored file holds, leads aside. */
+    var kept = 0;
+    if (window.Tracker && window.Tracker.applications){
+      (window.Tracker.applications() || []).forEach(function(a){ if (a && a.status !== 'idea') kept++; });
+    }
+
     var counts = {live:0, lead:0, wait:0, idea:0, shut:0};
     rows.forEach(function(r){ counts[r.getAttribute('data-s')]++; });
     stats.forEach(function(b){
       var f = b.getAttribute('data-f');
       var num = b.querySelector('b');
-      /* A lead is not an application, so the total is every row bar those. */
-      if (num) num.textContent = (f === 'all') ? (rows.length - counts.idea) : counts[f];
+      /* A lead is not an application, so the total is every row bar those.
+       * The page can hold fewer rows than the file does: deleting a row takes
+       * it off the table but leaves it in the data, which is why the masthead
+       * could say 97 while this card said 71. Show both rather than pick one. */
+      if (num){
+        if (f !== 'all') num.textContent = counts[f];
+        else {
+          var here = rows.length - counts.idea;
+          num.textContent = (kept > here) ? (here + '/' + kept) : String(here);
+        }
+      }
     });
     renderLive();
     renderStarred();

@@ -1630,3 +1630,5 @@ body.an-on .mast > :not(#pagechrome):not(.acctbar){display:none}
 /* A section that sets its own display beats the hidden attribute; these two
    do, and the analysis view relies on hidden meaning hidden. */
 section[hidden],.insights[hidden]{display:none}
+/* "71/97" needs a touch more room than "71" in the same box. */
+.tally .tstat[data-f="all"] b{font-size:clamp(22px,4.4vw,var(--t-stat,30px));letter-spacing:-.04em}
