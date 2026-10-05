@@ -661,6 +661,10 @@ window.TrackerApp = function(){
        * used to say does not. Without this test every row you had ever touched
        * replayed its old status over whatever the last refresh brought in. */
       var man = st.manual || {};
+      /* One word for "they said no": rows saved under the old Rejected chip
+       * read as Not shortlisted now, so the table, the filters and the
+       * analysis all count the same thing. */
+      if (st.label === 'Rejected') st.label = 'Not shortlisted';
       if (st.s && st.label && (man.status || man.chip)) setStatusQuiet(tr, st.s, st.label);
       if (st.co){ setCo(tr, st.co); tr.setAttribute('data-co', st.co.toLowerCase()); }
       if (st.link !== undefined) tr.setAttribute('data-link', st.link || '');
@@ -1448,7 +1452,7 @@ window.TrackerApp = function(){
     var tiles = [
       ['', total, 'Applications'],
       ['t-live', open, 'Still open'],
-      ['t-shut', knock.length, 'Rejected or not shortlisted'],
+      ['t-shut', knock.length, 'Not shortlisted'],
       ['t-wd', withdrew, 'Withdrawn']
     ];
     document.getElementById('an-tiles').innerHTML = tiles.map(function(t){
@@ -1489,7 +1493,7 @@ window.TrackerApp = function(){
              (Number(a.getAttribute('data-updated')) || Number(a.getAttribute('data-applied')) || 0);
     });
     document.getElementById('an-knock-note').textContent = knock.length
-      ? knock.length + ' applications, newest first.'
+      ? knock.length + ' applications the employer closed, newest first.'
       : 'Nothing has come back as a no yet.';
     document.getElementById('an-knock').innerHTML = knock.map(function(r){
       var upd = updShownOf(r) || r.getAttribute('data-date') || '';

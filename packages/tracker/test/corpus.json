@@ -3,7 +3,7 @@
   "cases": [
     {
       "want": "outcome",
-      "chip": "Rejected",
+      "chip": "Not shortlisted",
       "company": "Rivermead Group",
       "sender": "no-reply@eu.greenhouse-mail.io",
       "subject": "Your application to the Rivermead Group",
@@ -11,7 +11,7 @@
     },
     {
       "want": "outcome",
-      "chip": "Rejected",
+      "chip": "Not shortlisted",
       "company": "Calder IT",
       "sender": "alex-mercer@calderit.teamtailor-mail.com",
       "subject": "Thanks for your interest in joining Calder IT!",
@@ -19,7 +19,7 @@
     },
     {
       "want": "outcome",
-      "chip": "Rejected",
+      "chip": "Not shortlisted",
       "company": "Kitbag Studio",
       "sender": "no-reply@kitbagstudio.com",
       "subject": "Update on your application with Kitbag Studio",
@@ -27,7 +27,7 @@
     },
     {
       "want": "outcome",
-      "chip": "Rejected",
+      "chip": "Not shortlisted",
       "company": "Corvi",
       "sender": "noreply@indeed.com",
       "subject": "An update on your application from Corvi",
@@ -35,7 +35,7 @@
     },
     {
       "want": "outcome",
-      "chip": "Rejected",
+      "chip": "Not shortlisted",
       "company": "Halden Foods",
       "sender": "charlotte.wright@haldenfoods1.teamtailor-mail.com",
       "subject": "Thank you for your job application - Halden Foods",
@@ -43,7 +43,7 @@
     },
     {
       "want": "outcome",
-      "chip": "Rejected",
+      "chip": "Not shortlisted",
       "company": "Beacon Sports",
       "sender": "no-reply@ashbyhq.com",
       "subject": "Beacon Sports: Your Application - Freelance Senior Product Designer",
@@ -68,7 +68,7 @@
     },
     {
       "want": "outcome",
-      "chip": "Rejected",
+      "chip": "Not shortlisted",
       "company": "Fenwick Health",
       "sender": "noreply@candidates.workablemail.com",
       "subject": "UX Product Designer - Fenwick Health",
@@ -233,7 +233,7 @@
     },
     {
       "want": "outcome",
-      "chip": "Rejected",
+      "chip": "Not shortlisted",
       "company": "Calder IT",
       "sender": "\"Sam Alder - Calder IT\" <sam-alder@calderit.teamtailor-mail.com>",
       "subject": "Thanks for your interest in joining Calder IT!",

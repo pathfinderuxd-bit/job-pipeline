@@ -370,3 +370,11 @@ sweep never saw those confirmations at all. Now the query carries no label
 exclusion: every message brings its label names down with it, and `labelHit()`
 scores an excluded label as a single point against the thread. A digest still
 fails on its own wording; "thanks for applying" still gets through.
+
+## One word for a no
+
+There is no Rejected chip any more: every phrase that used to produce it —
+"not progressing", "unable to offer", "won't be moving forward" — now lands on
+**Not shortlisted**, and a row saved under the old chip is read as the new one
+when the page loads. The analysis counts one thing rather than two, and its
+list is headed Not shortlisted.

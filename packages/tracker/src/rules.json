@@ -73,8 +73,14 @@
     },
     {
       "status": "shut",
-      "chip": "Rejected",
+      "chip": "Not shortlisted",
       "match": [
+        "not shortlisted",
+        "not been shortlisted",
+        "closer match",
+        "with other candidates",
+        "other candidates who",
+        "other candidates whose",
         "not be progressing",
         "not progressing",
         "unsuccessful",
@@ -87,18 +93,6 @@
         "not be moving forward",
         "not to move forward",
         "not moving forward"
-      ]
-    },
-    {
-      "status": "shut",
-      "chip": "Not shortlisted",
-      "match": [
-        "not shortlisted",
-        "not been shortlisted",
-        "closer match",
-        "with other candidates",
-        "other candidates who",
-        "other candidates whose"
       ]
     },
     {
