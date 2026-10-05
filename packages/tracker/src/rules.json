@@ -176,6 +176,10 @@
   },
   "_subjectComment": "How to pull company and role out of a subject line. Each entry is a regular expression with named groups; the first one that matches is used. The last pattern is Workable's \"Role - Company\"; its role side may not contain a colon or the word application, or \"Acme: Your Application - Designer\" reads backwards.",
   "subjectPatterns": [
+    "^Thanks for applying to join us at (?<company>.+?)!*$",
+    "^Your [Aa]pplication:\\s*(?<role>.+?)$",
+    "^Confirmation of your (?<company>.+?) application$",
+    "^(?<company>.+?) \\| Application Confirmation for (?<role>.+?)$",
     "^(?:Your )?[Aa]pplication (?:for|to) (?<role>.+?) at (?<company>.+?)$",
     "^(?<company>.+?): (?:Your )?application for (?<role>.+?)$",
     "^Thank you for applying to (?<role>.+?) at (?<company>.+?)$",

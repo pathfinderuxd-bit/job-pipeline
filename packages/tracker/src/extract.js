@@ -192,6 +192,14 @@
       "\\b" + ci('the') + "\\s+" + TITLE + "\\s+" + any(['position', 'role', 'job']) + "\\b",
       /* WTTJ: "you recently applied for a job on Welcome to the Jungle: Lead Designer What happened…" */
       "\\b" + ci('applied for a job on') + " [^:\\n]{3,40}:\\s*([A-Z][^.?\\n]{2,80}?)(?=\\s+" + ci('what happened') + "|[.?\\n]|$)",
+      /* "received your application for our Senior Product Designer role -" */
+      "\\b" + ci('application for') + "\\s+(?:" + any(['our', 'the', 'a', 'this']) + "\\s+)?" +
+        "([A-Z][^.,\\n]{2,80}?)\\s+" + any(['role', 'position', 'job', 'vacancy']) + "\\b",
+      /* "for the position of Principal UX Designer." — no employer after it,
+       * which the first pattern above requires. */
+      "\\b" + any(['position', 'role']) + "\\s+" + ci('of') + "\\s+(?:" + ci('the') + "\\s+)?([A-Z][^.,\\n]{2,80}?)\\s*[.,\\n]",
+      /* An agency's reference line: "Ref: Principal UX Designer" */
+      "(?:^|\\n)\\s*" + ci('ref') + "\\s*[:\\-]\\s*([A-Z][^.\\n]{2,80}?)\\s*(?:\\n|$)",
       /* "received your application for Senior Product Designer, and" */
       "\\b" + ci('application for') + "\\s+(?:" + ci('the') + "\\s+)?([A-Z][^.,\\n]{2,80}?)(?:\\s+" + any(['job', 'position', 'role']) + ")?\\s*[,.]"
     ];
@@ -208,6 +216,10 @@
   function companyFromBody(body) {
     var text = String(body || '');
     var tries = [
+      /* A sign-off names the employer when nothing else in the mail does:
+       * "Boots Recruitment Team", "The Faculty Talent Acquisition Team". */
+      NAME + "\\s+" + any(['Recruitment', 'Talent Acquisition', 'Talent', 'Hiring', 'People']) +
+        "\\s+" + any(['Team', 'Partner']),
       "\\b" + any(['at', 'with', 'to']) + "\\s+(?:" + ci('the') + "\\s+)?" + NAME + "\\b",
       "\\b" + any(['joining', 'interest in', 'career at']) + "\\s+(?:" + ci('the') + "\\s+)?" + NAME + "\\b"
     ];
@@ -335,6 +347,13 @@
     }
     if (!role) role = roleFromBody(first.body);
     company = tidyName(company);
+
+    /* "Lead UX Designer at Lead UX Designer" is the shape a confident wrong
+     * answer takes — the role sentence read twice. Rather than show that, say
+     * the employer is not known and let the review screen ask. */
+    if (company && role && tidyName(company).toLowerCase() === tidyName(role).toLowerCase()) {
+      company = '';
+    }
 
     /* When the outcome is a decision rather than an acknowledgement, its date
      * is real news even if it arrived as a thread of its own — which is how

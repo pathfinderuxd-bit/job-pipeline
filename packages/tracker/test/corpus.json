@@ -359,6 +359,33 @@
       "sender": "Vinh Giang <support@vinhgiang.com>",
       "subject": "[V] I hate giraffes",
       "body": "Hi Rich, a short story about presence and why your application of it matters."
+    },
+    {
+      "want": "ack",
+      "why": "a sign-off is the only place the employer is named",
+      "company": "Halden Foods",
+      "role": "Lead UX Designer",
+      "sender": "Enterprise@trm.brassring.com",
+      "subject": "Confirmation of your Halden Foods application",
+      "body": "Hi Rich,\n\nThank you so much for your interest in the Lead UX Designer position, we really appreciate the time you've spent on your application.\n\nOnce we've had a look at your application, we will email you and let you know its progress.\n\nHalden Foods Recruitment Team"
+    },
+    {
+      "want": "ack",
+      "why": "employer in the subject, role after it",
+      "company": "Kestrel Labs",
+      "role": "Senior Product Designer",
+      "sender": "no-reply@ashbyhq.com",
+      "subject": "Kestrel Labs | Application Confirmation for Senior Product Designer",
+      "body": "Hi Rich,\n\nThank you so much for taking the time to apply for the Senior Product Designer at Kestrel Labs.\n\nThe Kestrel Labs Talent Acquisition Team"
+    },
+    {
+      "want": "ack",
+      "why": "the role sits inside the thanks, the employer after join us at",
+      "company": "Tallyworks",
+      "role": "Senior Product Designer",
+      "sender": "amy@tallyworks.teamtailor-mail.com",
+      "subject": "Thanks for applying to join us at Tallyworks!",
+      "body": "Hi Rich,\n\nJust to let you know, we've received your application for our Senior Product Designer role - thank you for your interest in joining the Tallyworks team!"
     }
   ]
 }
