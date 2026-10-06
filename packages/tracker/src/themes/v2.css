@@ -1148,7 +1148,7 @@ dialog.cvl{max-height:min(86vh,900px)}
      take the slack" and started meaning "220px TALL, and grow". Hence a
      two-line card 650px deep with the status pill marooned at the bottom. */
   .live-list li{flex-wrap:nowrap;gap:7px}
-  .live-list .rl{flex:0 0 auto}
+  .live-list .rl{flex:0 1 auto}
   .live-list .nx{align-self:flex-start;margin-top:3px}
 }
 
@@ -1752,3 +1752,14 @@ body.an-on .mast > :not(#pagechrome):not(.acctbar){display:none}
 section[hidden],.insights[hidden]{display:none}
 /* "71/97" needs a touch more room than "71" in the same box. */
 .tally .tstat[data-f="all"] b{font-size:clamp(22px,4.4vw,var(--t-stat,30px));letter-spacing:-.04em}
+
+
+/* ---- never wider than the screen ----
+   The "next step" pill is nowrap, so a long one (an interview invitation with
+   a date and a link) pushed the whole page wider than a phone. The browser
+   then zoomed out and the page could be dragged sideways. The pill wraps now,
+   and nothing in the page column may outgrow the page. */
+.live-list li{min-width:0}
+.live-list .nx{white-space:normal;max-width:100%;overflow-wrap:anywhere}
+.wrap{min-width:0;max-width:100%}
+html,body{max-width:100%;overflow-x:clip}
