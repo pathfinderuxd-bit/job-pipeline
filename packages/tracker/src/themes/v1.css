@@ -1643,3 +1643,23 @@ section[hidden],.insights[hidden]{display:none}
 .live-list .nx{white-space:normal;max-width:100%;overflow-wrap:anywhere}
 .wrap{min-width:0;max-width:100%}
 html,body{max-width:100%;overflow-x:clip}
+
+/* ============================================================
+   v1.15 — the Letters page
+   ============================================================ */
+.letters[hidden]{display:none}
+.letters{display:block;margin-bottom:28px;max-width:760px}
+.lt-bar,.lt-actions,.lt-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 14px}
+.lt-empty{color:var(--ink-3);font-size:var(--t-meta,13px);margin:0 0 14px}
+.lt-meta{margin:0 0 8px;font-weight:600}
+.letters textarea,.lt-form input,.lt-form select,.lt-form textarea,.lt-row select,.lt-row input{
+  width:100%;box-sizing:border-box;font:inherit;color:var(--ink);background:var(--surface,transparent);
+  border:1px solid var(--line-strong);border-radius:8px;padding:10px 12px;
+}
+.letters textarea{line-height:1.5;resize:vertical;margin:0 0 12px}
+.lt-row select,.lt-row input{width:auto;flex:1 1 180px;margin:0}
+.lt-tpl{margin-top:26px}
+.lt-form{display:flex;flex-direction:column;gap:6px}
+.lt-form label{font-size:12.5px;color:var(--ink-2);margin-top:8px}
+body.lt-on .tally{display:none}
+body.lt-on .mast > :not(#pagechrome):not(.acctbar){display:none}

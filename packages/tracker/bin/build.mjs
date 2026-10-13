@@ -113,7 +113,7 @@ const head = [
 const tail = hosted
   ? [src('store.js'), src('toast.js'), src('extract.js'), src('google.js'),
      src('cvstore.js'), src('cvui.js'), src('chrome.js'),
-     src('render.js'), src('app.js'), src('gate.js')]
+     src('render.js'), src('app.js'), src('letters.js'), src('gate.js')]
   : [src('toast.js'), src('cvstore.js'), src('cvui.js'), src('chrome.js'),
      src('render.js'), src('app.js')];
 

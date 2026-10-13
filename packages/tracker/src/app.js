@@ -293,6 +293,32 @@ window.TrackerApp = function(){
       : 'Saved automatically';
   });
 
+  /* Letters page: fill the open letter from a template, or file a finished one. */
+  var clFill = document.getElementById('cl-fill');
+  if (clFill) clFill.addEventListener('click', function(){
+    if (!clRow || !window.Letters || !window.Letters.ask) return;
+    var row = clRow;
+    window.Letters.ask({ company: coOf(row), role: roleOf(row), done: function(text){
+      if (clRow !== row) return;
+      if (clText.value.trim() && !window.confirm('Replace the letter on this job?')) return;
+      clText.value = text;
+      clText.dispatchEvent(new Event('input'));
+    }});
+  });
+  window.TrackerApp.setLetter = function(company, role, text){
+    var c = String(company || '').toLowerCase(), r = String(role || '').toLowerCase(), hit = null;
+    rows.forEach(function(tr){
+      if (tr.getAttribute('data-co') !== c) return;
+      var rl = roleOf(tr).toLowerCase();
+      if (rl === r || rl.indexOf(r) === 0 || r.indexOf(rl) === 0) hit = hit || tr;
+    });
+    if (!hit) return '';
+    hit.setAttribute('data-cl', text);
+    clLabel(hit);
+    persist(hit);
+    return coOf(hit);
+  };
+
   document.getElementById('cl-close').addEventListener('click', function(){ clDlg.close(); });
   document.getElementById('cl-copy').addEventListener('click', function(){
     var v = clText.value;

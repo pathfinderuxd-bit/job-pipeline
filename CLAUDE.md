@@ -378,3 +378,13 @@ There is no Rejected chip any more: every phrase that used to produce it —
 **Not shortlisted**, and a row saved under the old chip is read as the new one
 when the page loads. The analysis counts one thing rather than two, and its
 list is headed Not shortlisted.
+
+## The Letters page
+
+A view like Analyse (`body.lt-on`, siblings hidden, dialogs left alone), kept in
+`letters.js`. Templates live in `doc.letters` (`templates`, `active`, `last`) and
+sync with the account. `{{company}}`, `{{role}}` and optional `{{why}}` are filled
+by the pure `fill()`; an empty `why` drops its whole line. The prompt dialog
+`#ltdlg` also opens from the cover letter box (`Fill from template`). Imports carry
+`letters` and add templates by name (`Store.mergeLetters`). The cover letter text
+itself is personal: never put a real one in a tracked file or test.

@@ -109,6 +109,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add
       </button>
       <button type="button" class="qf qf-an" id="analysebtn" aria-label="Analyse the applications"><span class="an-l">Analyse</span><span class="an-i" aria-hidden="true">&#128200;</span></button>
+      <button type="button" class="qf qf-an qf-lt" id="lettersbtn" aria-pressed="false" aria-label="Cover letters"><span class="an-l">Letters</span><span class="an-i" aria-hidden="true">&#9993;</span></button>
       <button type="button" class="reset" id="resetall" hidden>Clear filters</button>
       <button type="button" class="reset" id="resetcols" hidden>Reset columns</button>
       <button type="button" class="colsbtn" id="colsbtn" aria-haspopup="true" aria-expanded="false">Columns</button>
@@ -158,6 +159,42 @@
     <div class="an-card"><div id="an-knock"></div></div>
   </section>
 
+  <section class="letters" id="letters" hidden aria-label="Cover letters">
+    <button type="button" class="an-back" id="lt-back">&larr; Back to jobs</button>
+    <p class="an-eyebrow">Job pipeline &middot; cover letters</p>
+    <h2 class="an-h1">Cover letter</h2>
+    <p class="an-sub">Your template keeps {{company}} and {{role}} as blanks. Say which job it is for and they are filled in.</p>
+    <div class="lt-bar">
+      <button type="button" class="btn-primary" id="lt-new">New letter</button>
+      <button type="button" class="btn-ghost" id="lt-edit" aria-expanded="false">Edit template</button>
+    </div>
+    <div class="lt-empty" id="lt-empty">Press New letter, then enter the company and role.</div>
+    <div class="lt-result" id="lt-result" hidden>
+      <p class="lt-meta" id="lt-meta"></p>
+      <textarea id="lt-out" rows="22" spellcheck="true" aria-label="Cover letter text"></textarea>
+      <div class="lt-actions">
+        <button type="button" class="btn-primary" id="lt-copy">Copy</button>
+        <button type="button" class="btn-ghost" id="lt-savejob">Save to the job</button>
+        <button type="button" class="btn-ghost" id="lt-more">Another company</button>
+        <span class="cl-hint" id="lt-hint"></span>
+      </div>
+    </div>
+    <div class="lt-tpl" id="lt-tpl" hidden>
+      <h3 class="an-h2">Template</h3>
+      <p class="an-note">Use {{company}} and {{role}} where they go. {{why}} is optional: a line only you write each time, dropped when left empty.</p>
+      <div class="lt-row">
+        <select id="lt-pick" aria-label="Template"></select>
+        <input id="lt-tname" type="text" aria-label="Template name" autocomplete="off">
+      </div>
+      <textarea id="lt-ttext" rows="18" spellcheck="true" aria-label="Template text"></textarea>
+      <div class="lt-actions">
+        <button type="button" class="btn-ghost" id="lt-add">New template</button>
+        <button type="button" class="btn-ghost" id="lt-del">Delete template</button>
+        <span class="cl-hint">Saved automatically</span>
+      </div>
+    </div>
+  </section>
+
   <section class="insights">
     <div class="sechead">
       <h2>Application insights</h2>
@@ -177,6 +214,7 @@
     <div class="ed-head cl-head">
       <span id="cl-title">Cover letter</span>
       <span class="cl-actions">
+        <button type="button" class="btn-ghost" id="cl-fill">Fill from template</button>
         <button type="button" class="btn-ghost" id="cl-copy">Copy</button>
         <button type="button" class="btn-ghost" id="cl-close">Close</button>
       </span>
@@ -186,6 +224,28 @@
         placeholder="Paste your cover letter here. Line breaks and paragraphs are kept exactly as pasted."></textarea>
     </div>
     <div class="ed-foot cl-foot"><span class="cl-hint" id="cl-hint">Saved automatically</span></div>
+  </dialog>
+
+  <dialog class="edit" id="ltdlg" aria-labelledby="ltd-title">
+    <form id="ltd-form" method="dialog" autocomplete="off">
+      <div class="ed-head"><span id="ltd-title">New cover letter</span></div>
+      <div class="ed-body lt-form">
+        <label for="ltd-from">From your applications</label>
+        <select id="ltd-from"></select>
+        <label for="ltd-company">Company</label>
+        <input id="ltd-company" type="text" required>
+        <label for="ltd-role">Role</label>
+        <input id="ltd-role" type="text" required>
+        <label for="ltd-why">Why them <span class="cl-hint">(optional, goes where {{why}} is)</span></label>
+        <textarea id="ltd-why" rows="3"></textarea>
+        <label for="ltd-tpl">Template</label>
+        <select id="ltd-tpl"></select>
+      </div>
+      <div class="ed-foot">
+        <button type="button" class="btn-ghost" id="ltd-cancel">Cancel</button>
+        <button type="submit" class="btn-primary" id="ltd-go">Fill the letter</button>
+      </div>
+    </form>
   </dialog>
 
   <dialog class="edit diff" id="diffdlg" aria-labelledby="diff-title">

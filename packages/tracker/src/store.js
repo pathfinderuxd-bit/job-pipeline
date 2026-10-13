@@ -272,7 +272,8 @@
       applications: Array.isArray(incoming.applications) ? incoming.applications.slice() : [],
       rows: (incoming.rows && typeof incoming.rows === 'object') ? incoming.rows : {},
       deleted: Array.isArray(incoming.deleted) ? incoming.deleted : [],
-      baseline: incoming.baseline || 'imported'
+      baseline: incoming.baseline || 'imported',
+      letters: (incoming.letters && Array.isArray(incoming.letters.templates)) ? incoming.letters : null
     };
   };
 
@@ -285,7 +286,25 @@
       if (!rows[id]) { rows[id] = parsed.rows[id]; n++; }
     });
     (parsed.deleted || []).forEach(function (k) { this.markDeleted(k); }, this);
+    this.mergeLetters(parsed.letters);
     return n;
+  };
+
+  /* Templates are additive too: adopt them if there are none, else add the
+   * ones whose name is new. */
+  Store.prototype.mergeLetters = function (inc) {
+    if (!inc || !Array.isArray(inc.templates) || !inc.templates.length) return;
+    var d = this.doc;
+    if (!d.letters || !Array.isArray(d.letters.templates)) d.letters = { templates: [], active: '', last: {} };
+    var have = {};
+    d.letters.templates.forEach(function (t) { have[t.name] = true; });
+    inc.templates.forEach(function (t) {
+      if (t && t.name && typeof t.text === 'string' && !have[t.name]) {
+        d.letters.templates.push({ id: t.id || ('t' + Date.now().toString(36) + d.letters.templates.length), name: t.name, text: t.text });
+        have[t.name] = true;
+      }
+    });
+    if (!d.letters.active && d.letters.templates.length) d.letters.active = d.letters.templates[0].id;
   };
 
   Store.prototype.importJSON = function (text) {
@@ -314,6 +333,7 @@
     if (!n && !src) throw new Error('That file has no applications in it.');
 
     (incoming.deleted || []).forEach(function (k) { this.markDeleted(k); }, this);
+    this.mergeLetters(incoming.letters);
     this.touch();
     return n;
   };
